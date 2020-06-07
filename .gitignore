@@ -1,0 +1,4 @@
+*.old
+*.arm*
+*.sed
+test/build/init_functions

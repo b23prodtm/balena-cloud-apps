@@ -1,0 +1,30 @@
+{
+  "name": "balena-cloud",
+  "version": "1.0.0",
+  "description": "Shell scripts package of containers native interface from Balena Cloud",
+  "main": "index.js",
+  "require": {
+    "shellJS": "shelljs"
+  },
+  "directories": {
+    "test": "test",
+    "cni": "vendor/cni"
+  },
+  "scripts": {
+    "test": "cd test && ./build-test.sh && exit 0"
+  },
+  "keywords": [
+    "balena",
+    "balena.io",
+    "balenaCloud",
+    "balenaOS",
+    "helper",
+    "git"
+  ],
+  "author": "Tiana Rakoto Arimanana <b23prodtm@users.sourceforge.net>",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:b23prodtm/balena-cloud.git"
+  }
+}
