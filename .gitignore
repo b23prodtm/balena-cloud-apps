@@ -2,3 +2,4 @@
 *.arm*
 *.sed
 test/build/init_functions
+node_modules

@@ -1,17 +1,20 @@
 {
   "name": "balena-cloud",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Shell scripts package of containers native interface from Balena Cloud",
   "main": "index.js",
-  "require": {
-    "shellJS": "shelljs"
-  },
   "directories": {
     "test": "test",
     "cni": "vendor/cni"
   },
   "scripts": {
     "test": "cd test && ./build-test.sh && exit 0"
+  },
+  "bin": {
+    "auto_reboot": "vendor/cni/auto_reboot.sh",
+    "balena_deploy": "vendor/cni/balena_deploy.sh",
+    "docker_build": "vendor/cni/docker_build.sh",
+    "init_functions": "vendor/cni/init_functions.sh"
   },
   "keywords": [
     "balena",
@@ -26,5 +29,11 @@
   "repository": {
     "type": "git",
     "url": "git@github.com:b23prodtm/balena-cloud.git"
+  },
+  "optionalDependencies": {
+    "balena-cli": "^11.35.18"
+  },
+  "dependencies": {
+    "shelljs": "^0.8.4"
   }
 }

@@ -1,19 +1,28 @@
 # balena-cloud
+[![Balena-Cloud](https://circleci.com/gh/b23prodtm/balena-cloud.svg?style=shield)](https://app.circleci.com/pipelines/github/b23prodtm/balena-cloud)
  Shell scripts package of containers native interface from Balena Cloud
 
 ## Usage
-deploy.sh: place it in the root folder of the project.
 ```Shell
 #!/usr/bin/env bash
-### Paste in here latest File Revisions
-REV=https://raw.githubusercontent.com/b23prodtm/vagrant-shell-scripts/b23prodtm-patch/vendor/cni/balena_deploy.sh
-#REV=https://raw.githubusercontent.com/b23prodtm/vagrant-shell-scripts/87e48481c955e213de3d08453dd4dd56d1104bec/vendor/cni/balena_deploy.sh
-sudo curl -SL -o /usr/local/bin/balena_deploy $REV
-sudo chmod 0755 /usr/local/bin/balena_deploy
-source balena_deploy ${BASH_SOURCE[0]} "$@"
+npm install balena-cloud
 ```
 Copy test/build/ folder to the root folder of your project
 Make changes to the Dockerfile, common.env and <arch>.env files
+
+Deploy to balena
+
+    balena_deploy .
+
+You can build locally:
+
+    docker_build .
+
+In a BASH terminal, use arguments:
+```Console
+balena_deploy . x86_64 --nobuild --exit
+balena_deploy . armhf --balena
+```
 ## Environment Variables
 There are some data information to complete and describe the project.
 It follows that:
@@ -27,11 +36,6 @@ DKR_ARCH=x86_64
 BALENA_MACHINE_NAME=intel-nuc
 IMG_TAG=latest
 PRIMARY_HUB=docker-hub-balenalib-repo\\/container-servìce-image
-```
-In a BASH terminal, type for instance:
-```Console
-./deploy.sh x86_64 --nobuild --exit
-./deploy.sh armhf --balena
 ```
 ## Test
 Run unit tests on local host or CI

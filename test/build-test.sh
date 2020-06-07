@@ -17,7 +17,7 @@ function test_docker() {
   # shellcheck source=../vendor/cni/docker_build.sh
   . "$vendord/docker_build.sh" "$testd/submodule" "$@" >> "$LOG"
 }
-test_docker -m . "betothreeprod/intel-nuc-dind" "$DKR_ARCH"
+test_docker -m . "betothreeprod/intel-nuc" "$DKR_ARCH"
 results+=("$?")
 [ "$chkSet" = 'x' ] && unset DEBIAN_FRONTEND || DEBIAN_FRONTEND=${chkSet:2}
 check_log "$LOG"

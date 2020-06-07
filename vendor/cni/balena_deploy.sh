@@ -3,18 +3,11 @@ set -u
 [ "$#" -eq 0 ] && echo "usage $0 <project_root> <args>" && exit 0
 [ -f "$1" ] && set -- "$(cd "$(dirname "$1")" && pwd)" "${@:2}"
 project_root="$(cd "$1" && pwd)"; shift
-banner=("" "[$0] BASH ${BASH_SOURCE[0]}" "$project_root" "$*"); printf "%s\n" "${banner[@]}"
+banner=("" "[$0] BASH ${BASH_SOURCE[0]}" "$project_root" ""); printf "%s\n" "${banner[@]}"
 
-### Paste in here latest File Revisions
-REV=https://raw.githubusercontent.com/b23prodtm/vagrant-shell-scripts/b23prodtm-patch/vendor/cni/init_functions.sh
-if [ -f "$(dirname "${BASH_SOURCE[0]}")/init_functions.sh" ]; then
-  ln -vsf "$(dirname "${BASH_SOURCE[0]}")/init_functions.sh" "$project_root/init_functions"
-else
-  curl -SL -o "$project_root/init_functions" $REV
-fi
-chmod 0755 "$project_root/init_functions"
 # shellcheck source=init_functions.sh
-. "${project_root}/init_functions" "${BASH_SOURCE[0]}"
+. "$(command -v init_functions)" "${BASH_SOURCE[0]}"
+[ "${DEBUG:-0}" != 0 ] && log_daemon_msg "passed args $*"
 
 LOG=${LOG:-"$(new_log)"}
 ### ADD HERE ### A MARKER STARTS... ### A MARKER ENDS
@@ -30,7 +23,7 @@ function setMARKERS(){
 # Disable blocks to Cross-Build ARM on x86_64 (-c) and ARM only (-a)
 # Default: -a -c (Disable Cross-Build)
 function comment() {
-  [ "$#" -eq 0 ] && echo "missing file input" && exit 0
+  [ "$#" -eq 0 ] && log_failure_msg "missing file input" && exit 0
   file=$1
   [ "$#" -eq 1 ] && comment "$file" -a -c && return
   while [ "$#" -gt 1 ]; do case $2 in
@@ -46,7 +39,7 @@ function comment() {
 # Enable blocks to Cross-Build ARM on x86_64 (-c) and ARM only (-a)
 # Default: -a -c (Enable Cross-Build ARM only on x86_64)
 function uncomment() {
-  [ "$#" -eq 0 ] && echo "missing file input" && exit 0
+  [ "$#" -eq 0 ] && log_failure_msg "missing file input" && exit 0
   file=$1
   [ "$#" -eq 1 ] && uncomment "$file" -a -c && return
   while [ "$#" -gt 1 ]; do case $2 in
@@ -82,7 +75,7 @@ usage=("" \
 "Set BALENA_PROJECTS=(./dir_one ./dir_two ./dir_three) in common.env file." \
 "Set BALENA_PROJECTS_FLAGS=(VAR_ONE VAR_TWO)" \
 "")
-arch=$1
+arch=${1:-''}
 [ "${DEBIAN_FRONTEND:-}" = 'noninteractive' ] && set -- "$@" "--exit"
 saved=("${@:2}")
 while true; do
@@ -103,6 +96,7 @@ while true; do
   esac
 done
 DKR_ARCH=${arch}
+[ ! -f "$project_root/${DKR_ARCH}.env" ] && log_failure_msg "Missing arch file ${DKR_ARCH}.env" && exit 1
 ln -vsf "$project_root/${DKR_ARCH}.env" "$project_root/.env" >> "$LOG"
 # shellcheck disable=SC1090
 . "$project_root/.env" && . "$project_root/common.env"
@@ -153,15 +147,15 @@ function cross_build_start() {
   crossbuild=1
   if [ "$#" -gt 0 ]; then case $1 in
       -[d]*)
-        echo "$MARK_END" >> "$LOG"
+        log_progress_msg "$MARK_END" >> "$LOG"
         crossbuild=0
         ;;
       *)
-        echo "Wrong usage: ${FUNCNAME[0]} $1" >&2
+        log_failure_msg "Wrong usage: ${FUNCNAME[0]} $1" >&2
         exit 3;;
     esac;
   else
-    echo "$MARK_BEGIN" >> "$LOG"
+    log_progress_msg "$MARK_BEGIN" >> "$LOG"
   fi
   for d in "${projects[@]}"; do
     [ "$d" != '.' ] && ln -vsf "$project_root/${DKR_ARCH}.env" "$project_root/$d/.env" >> "$LOG"
