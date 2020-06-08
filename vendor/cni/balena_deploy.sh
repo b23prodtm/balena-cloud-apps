@@ -9,7 +9,7 @@ banner=("" "[$0] BASH ${BASH_SOURCE[0]}" "$project_root" ""); printf "%s\n" "${b
 . "$(command -v init_functions)" "${BASH_SOURCE[0]}"
 [ "${DEBUG:-0}" != 0 ] && log_daemon_msg "passed args $*"
 
-LOG=${LOG:-"$(new_log "" "$(basename $project_root).log")"}
+LOG=${LOG:-"$(new_log "" "$(basename "$project_root").log")"}
 ### ADD HERE ### A MARKER STARTS... ### A MARKER ENDS
 function setMARKERS(){
   # shellcheck disable=SC2089
@@ -216,7 +216,7 @@ function balena_push() {
   i=0
   [ "$#" -gt 0 ] && for a in "$@"; do apps+=("$a"); done
   for a in "${!apps[@]}"; do
-    [ $a = 0 ] && continue
+    [ "$a" = 0 ] && continue
     printf "[%s]: %s " "$a" "${apps[$a]}"
   done
   log_daemon_msg "Found ${apps[0]} apps."
@@ -225,11 +225,11 @@ function balena_push() {
   bash -c "balena push ${apps[$i]}"
 }
 set -- "${saved[@]}"
-while [ "$#" -gt 0 ]; do
+while true; do
   # SSH-ADD to Agent (PID)
   eval "$(ssh-agent)"
   ssh-add ~/.ssh/*id_rsa >> "$LOG" 2>&1 || true
-  next=${target:-$1}
+  next=${target:-${1:-}}
   # store target
   log_daemon_msg "$0 $arch $next" >> "$LOG"
   unset target
