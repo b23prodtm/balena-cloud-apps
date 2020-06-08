@@ -1,6 +1,6 @@
-FROM balenalib/%%BALENA_MACHINE_NAME%%:latest
+FROM balenalib/generic-aarch64:latest
 ARG DKR_ARCH
-ENV DKR_ARCH ${DKR_ARCH:-%%BALENA_ARCH%%}
+ENV DKR_ARCH ${DKR_ARCH:-aarch64}
 RUN ["cross-build-start"]
 
 RUN printf "* %s VM, %s IMAGE" "$(arch)" "$DKR_ARCH"

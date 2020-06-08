@@ -55,7 +55,8 @@ docker build -f "$workd/$DIR/Dockerfile.${DKR_ARCH}" -t "$NAME:$IMG_TAG" "$workd
 container=$(echo "$NAME" | cut -d/ -f2-)
 docker run --rm -itd --name "$container" "$NAME:$IMG_TAG" &
 sleep 2
-docker stop "$container"
+container="$(docker ps -q -a -f "name=$container")"
+[ "$container" ] && docker stop "$container"
 docker login docker.io -u "${DOCKER_USER:-}" -p "${DOCKER_PASS:-}"
 docker push "$NAME:$IMG_TAG"
 docker tag "$NAME:$IMG_TAG" "$NAME:$IMG_TAG-${DKR_ARCH}"

@@ -8,18 +8,34 @@ testd="$(cd "$(dirname "${BASH_SOURCE[0]}")/build" && pwd)"
 LOG=$(new_log "/tmp")
 [ "$DEBUG" ] && LOG=$(new_log "/dev" "/stderr")
 function test_deploy() {
-  args=("armhf" --nobuild --exit)
+  args=("3" --nobuild --exit)
   # shellcheck disable=SC1090
   . "$vendord/balena_deploy.sh" "$testd" "${args[@]}" >> "$LOG"
-  grep -q "raspberrypi3" < "$testd/docker-compose.armhf"
+  grep -q "intel-nuc" < "$testd/docker-compose.x86_64" || true
+}
+function test_deploy_2() {
+  args=("2" --nobuild --exit)
+  # shellcheck disable=SC1090
+  . "$vendord/balena_deploy.sh" "$testd" "${args[@]}" >> "$LOG"
+  grep -q "generic-aarch64" < "$testd/docker-compose.aarch64" || true
+}
+function test_deploy_3() {
+  args=("1" --nobuild --exit)
+  # shellcheck disable=SC1090
+  . "$vendord/balena_deploy.sh" "$testd" "${args[@]}" >> "$LOG"
+  grep -q "raspberrypi3" < "$testd/docker-compose.armhf" || true
 }
 test_deploy
 results=("$?")
+test_deploy_2
+results+=("$?")
+test_deploy_3
+results+=("$?")
 function test_docker() {
   args=("${testd}/submodule" -m . "betothreeprod/raspberrypi3" "$DKR_ARCH")
   # shellcheck disable=SC1090
   . "$vendord/docker_build.sh" "${args[@]}" >> "$LOG"
-  docker image rm "${args[3]}"
+  docker image ls -q "${args[3]}*"
 }
 test_docker
 results+=("$?")

@@ -10,50 +10,6 @@ banner=("" "[$0] BASH ${BASH_SOURCE[0]}" "$project_root" ""); printf "%s\n" "${b
 [ "${DEBUG:-0}" != 0 ] && log_daemon_msg "passed args $*"
 
 LOG=${LOG:-"$(new_log "" "$(basename "$project_root").log")"}
-### ADD HERE ### A MARKER STARTS... ### A MARKER ENDS
-function setMARKERS(){
-  # shellcheck disable=SC2089
-  export MARK_BEGIN="RUN \[ \"cross-build-start\" \]"
-  # shellcheck disable=SC2089
-  export MARK_END="RUN \[ \"cross-build-end\" \]"
-  export ARM_BEGIN="### ARM BEGIN"
-  export ARM_END="### ARM END"
-}
-### ------------------------------
-# Disable blocks to Cross-Build ARM on x86_64 (-c) and ARM only (-a)
-# Default: -a -c (Disable Cross-Build)
-function comment() {
-  [ "$#" -eq 0 ] && log_failure_msg "missing file input" && exit 0
-  file=$1
-  [ "$#" -eq 1 ] && comment "$file" -a -c && return
-  while [ "$#" -gt 1 ]; do case $2 in
-    -a*|--arm)
-      sed -i.arm -E -e "/${ARM_BEGIN}/,/${ARM_END}/s/^(.*)/# \\1/g" "$file" >> "$LOG"
-      ;;
-    -c*|--cross)
-      sed -i.old -E -e "s/[# ]*(${MARK_BEGIN})/# \\1/g" \
-      -e "s/[# ]*(${MARK_END})/# \\1/g" "$file" >> "$LOG"
-      ;;
-  esac; shift; done;
-}
-### ------------------------------
-# Enable blocks to Cross-Build ARM on x86_64 (-c) and ARM only (-a)
-# Default: -a -c (Enable Cross-Build ARM only on x86_64)
-function uncomment() {
-  [ "$#" -eq 0 ] && log_failure_msg "missing file input" && exit 0
-  file=$1
-  [ "$#" -eq 1 ] && uncomment "$file" -a -c && return
-  while [ "$#" -gt 1 ]; do case $2 in
-    -a*|--arm)
-      sed -i.x86 -E -e "/${ARM_BEGIN}/,/${ARM_END}/s/^(# )+(.*)/\\2/g" "$file" >> "$LOG"
-      ;;
-    -c*|--cross)
-      sed -i.old -E -e "s/[# ]+(${MARK_BEGIN})/\\1/g" \
-      -e "s/[# ]+(${MARK_END})/\\1/g" "$file" >> "$LOG"
-      ;;
-  esac; shift; done;
-}
-setMARKERS
 usage=("" \
 "Usage ${BASH_SOURCE[0]}  [1|2|3|<arch>] [1,--local|2,--balena|3,--nobuild|4,--docker|5,--push] [0,--exit]" \
 "                         1|arm32*|armv7l|armhf   ARMv7 OS" \
@@ -114,7 +70,6 @@ if [ -n "$BALENA_PROJECTS_FLAGS" ]; then
 fi
 function setArch() {
   while [ "$#" -gt 1 ]; do
-    cp -f "$1" "$1.old"
     cat /dev/null > "$1.sed"
     sed=("s/%%BALENA_MACHINE_NAME%%/${BALENA_MACHINE_NAME}/g" \
     "s/(Dockerfile\.)[^\.]*/\\1${DKR_ARCH}/g" \
@@ -149,6 +104,56 @@ function deploy_deps() {
     fi
   done
 }
+### ADD HERE ### A MARKER STARTS... ### A MARKER ENDS
+function setMARKERS(){
+  # shellcheck disable=SC2089
+  export MARK_BEGIN="RUN [^a-z]*cross-build-start[^a-z]*"
+  # shellcheck disable=SC2089
+  export MARK_END="RUN [^a-z]*cross-build-end[^a-z]*"
+  export ARM_BEGIN="### ARM BEGIN"
+  export ARM_END="### ARM END"
+}
+### ------------------------------
+# Disable blocks to Cross-Build ARM on x86_64 (-c) and ARM only (-a)
+# Default: -a -c (Disable Cross-Build)
+function comment() {
+  [ "$#" -eq 0 ] && log_failure_msg "missing file input" && exit 0
+  file=$1
+  [ "$#" -eq 1 ] && comment "$file" -a -c && return
+  cat /dev/null > "$file.sed"
+  while [ "$#" -gt 1 ]; do case $2 in
+    -a*|--arm)
+      echo "/${ARM_BEGIN}/,/${ARM_END}/s/^[# ]*(.*)/# \\1/g" >> "$file.sed"
+      ;;
+    -c*|--cross)
+      sed=("s/[# ]*(${MARK_BEGIN})/# \\1/g" \
+      "s/[# ]*(${MARK_END})/# \\1/g")
+      printf "%s\n" "${sed[@]}" >> "$file.sed"
+      ;;
+  esac; shift; done;
+  sed -E -f "$file.sed" "$file" | tee "$file" >> "$LOG"
+}
+### ------------------------------
+# Enable blocks to Cross-Build ARM on x86_64 (-c) and ARM only (-a)
+# Default: -a -c (Enable Cross-Build ARM only on x86_64)
+function uncomment() {
+  [ "$#" -eq 0 ] && log_failure_msg "missing file input" && exit 0
+  file=$1
+  [ "$#" -eq 1 ] && uncomment "$file" -a -c && return
+  cat /dev/null > "$file.sed"
+  while [ "$#" -gt 1 ]; do case $2 in
+    -a*|--arm)
+      echo "/${ARM_BEGIN}/,/${ARM_END}/s/^(# )+(.*)/\\1/g" >> "$file.sed"
+      ;;
+    -c*|--cross)
+      sed=("s/(# )+(${MARK_BEGIN})/\\1/g" \
+      "s/(# )+(${MARK_END})/\\1/g")
+      printf "%s\n" "${sed[@]}" >> "$file.sed"
+      ;;
+  esac; shift; done;
+  sed -E -f "$file.sed" "$file" | tee "$file" >> "$LOG"
+}
+setMARKERS
 function cross_build_start() {
   crossbuild=1
   if [ "$#" -gt 0 ]; then case $1 in
