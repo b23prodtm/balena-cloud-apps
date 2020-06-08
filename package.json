@@ -1,6 +1,6 @@
 {
   "name": "balena-cloud",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Shell scripts package of containers native interface from Balena Cloud",
   "main": "index.js",
   "directories": {
