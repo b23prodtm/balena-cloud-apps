@@ -3,21 +3,25 @@ vendord="$(cd "$(dirname "${BASH_SOURCE[0]}")/../vendor/cni" && pwd)"
 chkSet="x${DEBIAN_FRONTEND:-}"
 DEBIAN_FRONTEND='noninteractive'
 testd="$(cd "$(dirname "${BASH_SOURCE[0]}")/build" && pwd)"
-# shellcheck source=../vendor/cni/init_functions.sh
+# shellcheck disable=SC1090
 . "$vendord/init_functions.sh" "$testd"
 LOG=$(new_log "/tmp")
 [ "$DEBUG" ] && LOG=$(new_log "/dev" "/stderr")
 function test_deploy() {
-  # shellcheck source=../vendor/cni/balena_deploy.sh
-  . "$vendord/balena_deploy.sh" "$testd" "$@" >> "$LOG"
+  args=("armhf" --nobuild --exit)
+  # shellcheck disable=SC1090
+  . "$vendord/balena_deploy.sh" "$testd" "${args[@]}" >> "$LOG"
+  grep -q "raspberrypi3" < "$testd/docker-compose.armhf"
 }
-test_deploy "$(arch)" --nobuild --exit
+test_deploy
 results=("$?")
 function test_docker() {
-  # shellcheck source=../vendor/cni/docker_build.sh
-  . "$vendord/docker_build.sh" "$testd/submodule" "$@" >> "$LOG"
+  args=("${testd}/submodule" -m . "betothreeprod/raspberrypi3" "$DKR_ARCH")
+  # shellcheck disable=SC1090
+  . "$vendord/docker_build.sh" "${args[@]}" >> "$LOG"
+  docker image rm "${args[3]}"
 }
-test_docker -m . "betothreeprod/intel-nuc" "$DKR_ARCH"
+test_docker
 results+=("$?")
 [ "$chkSet" = 'x' ] && unset DEBIAN_FRONTEND || DEBIAN_FRONTEND=${chkSet:2}
 check_log "$LOG"

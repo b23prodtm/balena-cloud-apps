@@ -4,4 +4,4 @@ services:
     docker:
       context: submodule
       dockerfile: Dockerfile.template
-    image: betothreeprod/%%BALENA_MACHINE_NAME%%-alpine
+    image: betothreeprod/%%BALENA_MACHINE_NAME%%

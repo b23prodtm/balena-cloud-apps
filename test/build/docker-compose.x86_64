@@ -4,4 +4,4 @@ services:
     docker:
       context: submodule
       dockerfile: Dockerfile.x86_64
-    image: betothreeprod/intel-nuc-alpine
+    image: betothreeprod/intel-nuc
