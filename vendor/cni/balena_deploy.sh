@@ -80,10 +80,9 @@ function setArch() {
       flag_val=$(eval "echo \${$flag}")
       echo "s/(${flag}[=:-]+)[^\$ }]+/\\1${flag_val}/g" >> "$1.sed"
     done
-    sed -E -f "$1.sed" "$1" | tee "$2" >> "$LOG"
+    sed -E -f "$1.sed" "$1" > "$2"
   shift 2; done
 }
-[ -f "$project_root/docker-compose.yml" ] && setArch "$project_root/docker-compose.yml" "$project_root/docker-compose.${DKR_ARCH}"
 ### ADD HERE ANY SUBMODULE DOCKER IMAGE / SERVICE TO DEPLOYMENTS
 projects=(".")
 if [ "${#BALENA_PROJECTS[@]}" -gt 0 ]; then
@@ -131,7 +130,7 @@ function comment() {
       printf "%s\n" "${sed[@]}" >> "$file.sed"
       ;;
   esac; shift; done;
-  sed -E -f "$file.sed" "$file" | tee "$file" >> "$LOG"
+  sed -i.x.old -E -f "$file.sed" "$file" >> "$LOG"
 }
 ### ------------------------------
 # Enable blocks to Cross-Build ARM on x86_64 (-c) and ARM only (-a)
@@ -143,15 +142,15 @@ function uncomment() {
   cat /dev/null > "$file.sed"
   while [ "$#" -gt 1 ]; do case $2 in
     -a*|--arm)
-      echo "/${ARM_BEGIN}/,/${ARM_END}/s/^(# )+(.*)/\\1/g" >> "$file.sed"
+      echo "/${ARM_BEGIN}/,/${ARM_END}/s/^(# )+(.*)/\\2/g" >> "$file.sed"
       ;;
     -c*|--cross)
-      sed=("s/(# )+(${MARK_BEGIN})/\\1/g" \
-      "s/(# )+(${MARK_END})/\\1/g")
+      sed=("s/(# )+(${MARK_BEGIN})/\\2/g" \
+      "s/(# )+(${MARK_END})/\\2/g")
       printf "%s\n" "${sed[@]}" >> "$file.sed"
       ;;
   esac; shift; done;
-  sed -E -f "$file.sed" "$file" | tee "$file" >> "$LOG"
+  sed -i.x.old -E -f "$file.sed" "$file"
 }
 setMARKERS
 function cross_build_start() {
@@ -190,8 +189,10 @@ function cross_build_start() {
         comment "$project_root/$d/Dockerfile.${DKR_ARCH}"
       fi
     fi
-    git_commit "${DKR_ARCH} pushed ${d}"
-    done
+    [ "$d" != '.' ] && cd "$project_root/$d" && git_commit "${DKR_ARCH} pushed ${d}"
+    cd "$project_root" || return
+  done
+  git_commit "${DKR_ARCH} pushed"
 }
 function git_commit() {
   if ! git config user.email > /dev/null; then
@@ -205,15 +206,16 @@ function native_compose_file_set() {
   if [ "$#" -gt 0 ]; then
     case $1 in
       -[d]*)
-        cp -vf "$project_root/docker-compose.yml.old" "$project_root/docker-compose.yml" >> "$LOG"
+        cp -vf "$project_root/docker-compose.yml.old" "$project_root/docker-compose.yml"
         ;;
       *)
         cp -vf "$project_root/docker-compose.yml" "$project_root/docker-compose.yml.old"
+        setArch "$project_root/docker-compose.yml" "$project_root/docker-compose.${DKR_ARCH}"
         cp -vf "$project_root/docker-compose.$1" "$project_root/docker-compose.yml"
         ;;
     esac
   else
-    native_compose_file_set "${DKR_ARCH}" >> "$LOG"
+    native_compose_file_set "${DKR_ARCH}"
   fi
 }
 function balena_push() {
