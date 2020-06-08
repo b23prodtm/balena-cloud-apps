@@ -41,9 +41,23 @@ function slogger() {
   [ "$#" -gt 1 ] && shift
   log_daemon_msg "$@"
 }
+function log_size() {
+  [ "$#" = 0 ] && log_failure_msg "File not found" && return
+  log_daemon_msg "num_entries=$(wc -l "$1" | awk '{ print $1 }')"
+}
+# Journal rotation
+LOG_MAX_ROLLOUT=${LOG_MAX_ROLLOUT:-500}
+
+# @param 1 folder
+# @param 2 filename
 function new_log() {
-  LOG="$(cd "${1:-"/tmp/log/$(basename "$0" .sh)"}" && pwd)/${2:-"$(date +%Y-%m-%d_%H:%M).log"}" && mkdir -p "$(dirname "$LOG")"
+  LOG="$(cd "${1:-"/tmp/log/$(basename "$0" .sh)"}" && pwd)/${2:-"$(date +%Y-%m-%d_%H:%M).log"}" \
+  && mkdir -p "$(dirname "$LOG")"
   touch "$LOG" && chmod 4766 "$LOG" # sticky bit
+  [ "$(log_size $LOG | cut -d= -f2)" -gt "$LOG_MAX_ROLLOUT" ] \
+  && mv "$LOG" "$LOG.$(date +%Y-%m-%d_%H:%M)" && new_log "$@" \
+  && return
+  # return value
   printf "%s\n" "$LOG"
 }
 function check_log() {

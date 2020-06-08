@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -u
-[ "$#" -eq 0 ] && echo "usage $0 <project_root> <args>" && exit 0
+[ "$#" -eq 0 ] && echo "usage $0 <project_root|\${BASH_SOURCE[0]}> <args>" && exit 0
 [ -f "$1" ] && set -- "$(cd "$(dirname "$1")" && pwd)" "${@:2}"
 project_root="$(cd "$1" && pwd)"; shift
 banner=("" "[$0] BASH ${BASH_SOURCE[0]}" "$project_root" ""); printf "%s\n" "${banner[@]}"
@@ -9,7 +9,7 @@ banner=("" "[$0] BASH ${BASH_SOURCE[0]}" "$project_root" ""); printf "%s\n" "${b
 . "$(command -v init_functions)" "${BASH_SOURCE[0]}"
 [ "${DEBUG:-0}" != 0 ] && log_daemon_msg "passed args $*"
 
-LOG=${LOG:-"$(new_log)"}
+LOG=${LOG:-"$(new_log "" "$(basename $project_root).log")"}
 ### ADD HERE ### A MARKER STARTS... ### A MARKER ENDS
 function setMARKERS(){
   # shellcheck disable=SC2089
@@ -31,7 +31,8 @@ function comment() {
       sed -i.arm -E -e "/${ARM_BEGIN}/,/${ARM_END}/s/^(.*)/# \\1/g" "$file" >> "$LOG"
       ;;
     -c*|--cross)
-      sed -i.old -E -e "s/[# ]*(${MARK_BEGIN})/# \\1/g" -e "s/[# ]*(${MARK_END})/# \\1/g" "$file" >> "$LOG"
+      sed -i.old -E -e "s/[# ]*(${MARK_BEGIN})/# \\1/g" \
+      -e "s/[# ]*(${MARK_END})/# \\1/g" "$file" >> "$LOG"
       ;;
   esac; shift; done;
 }
@@ -47,7 +48,8 @@ function uncomment() {
       sed -i.x86 -E -e "/${ARM_BEGIN}/,/${ARM_END}/s/^(# )+(.*)/\\2/g" "$file" >> "$LOG"
       ;;
     -c*|--cross)
-      sed -i.old -E -e "s/[# ]+(${MARK_BEGIN})/\\1/g" -e "s/[# ]+(${MARK_END})/\\1/g" "$file" >> "$LOG"
+      sed -i.old -E -e "s/[# ]+(${MARK_BEGIN})/\\1/g" \
+      -e "s/[# ]+(${MARK_END})/\\1/g" "$file" >> "$LOG"
       ;;
   esac; shift; done;
 }
@@ -76,7 +78,6 @@ usage=("" \
 "Set BALENA_PROJECTS_FLAGS=(VAR_ONE VAR_TWO)" \
 "")
 arch=${1:-''}
-[ "${DEBIAN_FRONTEND:-}" = 'noninteractive' ] && set -- "$@" "--exit"
 saved=("${@:2}")
 while true; do
   case $arch in
@@ -91,9 +92,14 @@ while true; do
       break;;
     *)
       printf "%s\n" "${usage[@]}"
-      read -rp "Set docker machine architecture ARM32, ARM64 bits or X86-64 (choose 1, 2 or 3) ? " arch
+      if [ "${DEBIAN_FRONTEND:-}" = 'noninteractive' ]; then
+        arch=$(grep "DKR_ARCH" < "$project_root/.env"| cut -d= -f2)
+      else
+        read -rp "Set docker machine architecture ARM32, ARM64 bits or X86-64 (choose 1, 2 or 3) ? " arch
+      fi
       ;;
   esac
+  log_progress_msg "Architecture $arch was selected"
 done
 DKR_ARCH=${arch}
 [ ! -f "$project_root/${DKR_ARCH}.env" ] && log_failure_msg "Missing arch file ${DKR_ARCH}.env" && exit 1
@@ -131,15 +137,15 @@ if [ "${#BALENA_PROJECTS[@]}" -gt 0 ]; then
 fi
 ### ADD HERE ANY DEPLOYMENT DEPENDENCIES COMMAND LINES
 DEPLOY_DEPS=(\
-"deployment/images/build.sh primary ${PRIMARY_HUB:-'PRIMARY_HUB'} ${DKR_ARCH}" \
-"deployment/images/build.sh secondary ${SECONDARY_HUB:-'SECONDARY_HUB'} ${DKR_ARCH}" \
+"${PRIMARY_HUB:-'PRIMARY_HUB'} ${DKR_ARCH}" \
+"${SECONDARY_HUB:-'SECONDARY_HUB'} ${DKR_ARCH}" \
 )
 function deploy_deps() {
   for d in "${DEPLOY_DEPS[@]}"; do
     if printf "%s" "$d" | grep -q "_HUB"; then
       :
     else
-      bash -c "$d" >> "$LOG" || true;
+      docker_build "${project_root}" deployment/images/primary "$d" >> "$LOG" 2>&1 || true;
     fi
   done
 }
@@ -179,13 +185,16 @@ function cross_build_start() {
         comment "$project_root/$d/Dockerfile.${DKR_ARCH}"
       fi
     fi
-    if ! git config user.email; then
+    git_commit "${DKR_ARCH} pushed ${d}"
+    done
+}
+function git_commit() {
+  if ! git config user.email > /dev/null; then
       githubuserid=${MAINTAINER:-'add-MAINTAINER-email-to-environment@github.com'}
       git config --local user.email "$githubuserid"
       git config --local user.name "$(echo "$githubuserid "| cut -d@ -f1)"
     fi
-    git commit -a -m "${DKR_ARCH} pushed to ${d}" >> "$LOG" 2>&1 || true
-  done
+    git commit -a -m "${1:-"Add commit message"}" >> "$LOG" 2>&1 || true
 }
 function native_compose_file_set() {
   if [ "$#" -gt 0 ]; then
@@ -199,22 +208,21 @@ function native_compose_file_set() {
         ;;
     esac
   else
-    native_compose_file_set "${DKR_ARCH}"  >> "$LOG"
+    native_compose_file_set "${DKR_ARCH}" >> "$LOG"
   fi
 }
 function balena_push() {
-  apps=()
-  [ "$#" -gt 0 ] && apps+=("$@")
+  apps=("$#")
   i=0
-  for app in "${apps[@]}"; do
-    i=$((i + 1))
-    printf "[%s]: %s " "${i}" "${app}"
-    apps+=([$i]="${app}")
+  [ "$#" -gt 0 ] && for a in "$@"; do apps+=("$a"); done
+  for a in "${!apps[@]}"; do
+    [ $a = 0 ] && continue
+    printf "[%s]: %s " "$a" "${apps[$a]}"
   done
-  read -rp "Where do you want to push [1-${#apps[@]}] ? " i
-  i=$((i - 1))
-  log_daemon_msg "${apps[$i)]} was selected"
-  balena push "${apps[$i]}"
+  log_daemon_msg "Found ${apps[0]} apps."
+  read -rp "Where do you want to push [1-${apps[0]}] ? " i
+  log_daemon_msg "${apps[$i]} was selected"
+  bash -c "balena push ${apps[$i]}"
 }
 set -- "${saved[@]}"
 while [ "$#" -gt 0 ]; do
@@ -222,6 +230,8 @@ while [ "$#" -gt 0 ]; do
   eval "$(ssh-agent)"
   ssh-add ~/.ssh/*id_rsa >> "$LOG" 2>&1 || true
   next=${target:-$1}
+  # store target
+  log_daemon_msg "$0 $arch $next" >> "$LOG"
   unset target
   case $next in
     1|--local)
@@ -230,7 +240,8 @@ while [ "$#" -gt 0 ]; do
       deploy_deps
       native_compose_file_set
       if command -v balena; then
-        balena_push "$(balena scan | awk '/address:/{print $2}')" || true
+        # shellcheck disable=SC2046
+        balena_push $(balena scan | awk '/address:/{print $2}') || true
       else
         log_failure_msg "Please install Balena Cloud to run this script."
       fi
@@ -252,13 +263,14 @@ while [ "$#" -gt 0 ]; do
       cross_build_start -d
       deploy_deps
       native_compose_file_set
-      if command -v balena; then
-        balena_push "$(balena apps | awk '{if (NR>1) print $2}')" || true
+      if command -v balena > /dev/null; then
+        # shellcheck disable=SC2046
+        balena_push $(balena apps | awk '{if (NR>1) print $2}') || true
       else
         log_warning_msg "Balena Cloud not installed. Using git push."
         git push -uf balena || true
       fi
-      native_compose_file_set -r
+      native_compose_file_set -d
       ;;
     3|--nobuild)
       slogger -st docker "Allow cross-build" >> "$LOG"
@@ -271,8 +283,12 @@ while [ "$#" -gt 0 ]; do
       log_daemon_msg "deploy's exiting..." >> "$LOG"
       break;;
     *)
-      [ "${DEBIAN_FRONTEND:-}" = "noninteractive" ] && log_warning_msg "In non-interactive mode no user interaction." >> "$LOG"
-      read -rp "What target docker's going to use (0:exit, 1:local-balena, 2:balena, 3:nobuild, 4:docker, 5:push) ?" target
+      if [ "${DEBIAN_FRONTEND:-}" = 'noninteractive' ]; then
+        # try last target
+        target=$(grep "$0 $arch" < "$LOG" | tail -1 | cut -d' ' -f3)
+      else
+        read -rp "What target docker's going to use (0:exit, 1:local-balena, 2:balena, 3:nobuild, 4:docker, 5:push) ?" target
+      fi
       ;;
   esac; shift
 done

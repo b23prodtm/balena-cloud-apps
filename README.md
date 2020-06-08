@@ -18,7 +18,7 @@ You can build locally:
 
     docker_build .
 
-In a BASH terminal, use arguments:
+In BASH scripts, use arguments:
 ```Console
 balena_deploy . x86_64 --nobuild --exit
 balena_deploy . armhf --balena
@@ -26,7 +26,7 @@ balena_deploy . armhf --balena
 ## Environment Variables
 There are some data information to complete and describe the project.
 It follows that:
-````common.env
+```common.env
 BALENA_PROJECTS=(MY/PATH MY/RELATIVE/PATH)
 BALENA_PROJECTS_FLAGS=(BALENA_MACHINE_NAME MY_VARIABLE)
 ```
