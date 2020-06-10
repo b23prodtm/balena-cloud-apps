@@ -8,11 +8,13 @@
 Within an open source application, like  [balena-sound](https://github.com/balenalabs/balena-sound), [wifi-repeater](https://github.com/balenalabs-incubator/wifi-repeater), install this module:
 ```Shell
 #!/usr/bin/env bash
+cd application
 npm install balena-cloud
+post_install
 ```
 Make changes to the Dockerfile, common.env and <arch>.env files (BALENA_PROJECTS_FLAGS for adding %%templates_var%% to your Dockerfile)
 
-Deploy to balena
+Deploy to balena, easy:
 
     balena_deploy .
 
@@ -25,14 +27,15 @@ In BASH scripts, use arguments:
 balena_deploy . x86_64 --nobuild --exit
 balena_deploy . armhf --balena
 ```
+
 ## Environment Variables
 There are some data information to complete and describe the project.
-It follows that:
+It follows that these definitions are required to be filled out:
 ```common.env
 BALENA_PROJECTS=(MY/PATH MY/RELATIVE/PATH)
 BALENA_PROJECTS_FLAGS=(BALENA_MACHINE_NAME MY_VARIABLE)
 ```
-Architectures: ARM is armhf and aarch64, INTEL/AMD is x86_64
+Architectures: ARM and Raspberry PI is armhf or aarch64, INTEL/AMD is x86_64:
 ```x86_64.env
 DKR_ARCH=x86_64
 BALENA_MACHINE_NAME=intel-nuc
