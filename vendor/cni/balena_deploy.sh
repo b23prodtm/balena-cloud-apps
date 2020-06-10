@@ -168,8 +168,8 @@ function cross_build_start() {
     log_progress_msg "$MARK_BEGIN" >> "$LOG"
   fi
   for d in "${projects[@]}"; do
-    [ "$d" != '.' ] && ln -vsf "$project_root/${DKR_ARCH}.env" "$project_root/$d/.env" >> "$LOG"
-    [ "$d" != '.' ] && ln -vsf "$project_root/common.env" "$project_root/$d/common.env" >> "$LOG"
+    [ "$(cd "$d" && pwd)" != "$(pwd)" ] && ln -vsf "$project_root/${DKR_ARCH}.env" "$project_root/$d/.env" >> "$LOG"
+    [ "$(cd "$d" && pwd)" != "$(pwd)" ] && ln -vsf "$project_root/common.env" "$project_root/$d/common.env" >> "$LOG"
     setArch "$project_root/$d/Dockerfile.template" "$project_root/$d/Dockerfile.${DKR_ARCH}"
     if [ -z $crossbuild ]; then
       if [ "$arch" != "x86_64" ]; then
