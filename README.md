@@ -1,14 +1,16 @@
 # balena-cloud
 [![Balena-Cloud](https://circleci.com/gh/b23prodtm/balena-cloud.svg?style=shield)](https://app.circleci.com/pipelines/github/b23prodtm/balena-cloud)
- Shell scripts package of containers native interface from Balena Cloud
+ Shell scripts package to the containers native interface BalenaOS for the Raspberry Pi.
+ Containers pushes to the official [Balena-CLI](https://github.com/balena-io/balena-cli) and also builds to the docker Hub registry.
 
 ## Usage
+
+Within an open source application, like  [balena-sound](https://github.com/balenalabs/balena-sound), [wifi-repeater](https://github.com/balenalabs-incubator/wifi-repeater), install this module:
 ```Shell
 #!/usr/bin/env bash
 npm install balena-cloud
 ```
-Copy test/build/ folder to the root folder of your project
-Make changes to the Dockerfile, common.env and <arch>.env files
+Make changes to the Dockerfile, common.env and <arch>.env files (BALENA_PROJECTS_FLAGS for adding %%templates_var%% to your Dockerfile)
 
 Deploy to balena
 

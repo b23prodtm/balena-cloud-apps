@@ -1,14 +1,15 @@
 {
   "name": "balena-cloud",
   "version": "1.0.8",
-  "description": "Shell scripts package of containers native interface from Balena Cloud",
+  "description": "Shell scripts package to the containers native interface BalenaOS for the Raspberry Pi.",
   "main": "index.js",
   "directories": {
     "test": "test",
     "cni": "vendor/cni"
   },
   "scripts": {
-    "test": "cd test && ./build-test.sh && exit 0"
+    "test": "cd test && ./build-test.sh && exit 0",
+    "post-install": "scripts/post-install.sh"
   },
   "bin": {
     "auto_reboot": "vendor/cni/auto_reboot.sh",
