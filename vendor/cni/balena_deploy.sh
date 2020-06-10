@@ -78,7 +78,9 @@ function setArch() {
     printf "%s\n" "${sed[@]}" >> "$1.sed"
     for flag in "${flags[@]}"; do
       flag_val=$(eval "echo \${$flag}")
-      echo "s/(${flag}[=:-]+)[^\$ }]+/\\1${flag_val}/g" >> "$1.sed"
+      sed=("s/(${flag}[=:-]+)[^\$ }]+/\\1${flag_val}/g" \
+      "s/%%${flag}%%/${flag_val}/g" )
+      printf "%s\n" "${sed[@]}" >> "$1.sed"
     done
     sed -E -f "$1.sed" "$1" > "$2"
   shift 2; done
@@ -91,15 +93,15 @@ if [ "${#BALENA_PROJECTS[@]}" -gt 0 ]; then
 fi
 ### ADD HERE ANY DEPLOYMENT DEPENDENCIES COMMAND LINES
 DEPLOY_DEPS=(\
-"${PRIMARY_HUB:-'PRIMARY_HUB'} ${DKR_ARCH}" \
-"${SECONDARY_HUB:-'SECONDARY_HUB'} ${DKR_ARCH}" \
+"deployment/images/primary ${PRIMARY_HUB:-'PRIMARY_HUB'} ${DKR_ARCH}" \
+"deployment/images/secondary ${SECONDARY_HUB:-'SECONDARY_HUB'} ${DKR_ARCH}" \
 )
 function deploy_deps() {
   for d in "${DEPLOY_DEPS[@]}"; do
     if printf "%s" "$d" | grep -q "_HUB"; then
       :
     else
-      docker_build "${project_root}" deployment/images/primary "$d" >> "$LOG" 2>&1 || true;
+      docker_build "${project_root}" "$d" >> "$LOG" 2>&1 || true;
     fi
   done
 }
@@ -168,10 +170,10 @@ function cross_build_start() {
     log_progress_msg "$MARK_BEGIN" >> "$LOG"
   fi
   for d in "${projects[@]}"; do
-    [ "$(cd "$d" && pwd)" != "$(pwd)" ] && ln -vsf "$project_root/${DKR_ARCH}.env" "$project_root/$d/.env" >> "$LOG"
+    ln -vsf "$project_root/${DKR_ARCH}.env" "$project_root/$d/.env" >> "$LOG"
     [ "$(cd "$d" && pwd)" != "$(pwd)" ] && ln -vsf "$project_root/common.env" "$project_root/$d/common.env" >> "$LOG"
     setArch "$project_root/$d/Dockerfile.template" "$project_root/$d/Dockerfile.${DKR_ARCH}"
-    if [ -z $crossbuild ]; then
+    if [ "$crossbuild" = 0 ]; then
       if [ "$arch" != "x86_64" ]; then
         comment "$project_root/$d/Dockerfile.${DKR_ARCH}" -c
         uncomment "$project_root/$d/Dockerfile.${DKR_ARCH}" -a
@@ -189,7 +191,7 @@ function cross_build_start() {
         comment "$project_root/$d/Dockerfile.${DKR_ARCH}"
       fi
     fi
-    [ "$d" != '.' ] && cd "$project_root/$d" && git_commit "${DKR_ARCH} pushed ${d}"
+    [ "$(cd "$d" && pwd)" != "$(pwd)" ] && cd "$project_root/$d" && git_commit "${DKR_ARCH} pushed ${d}"
     cd "$project_root" || return
   done
   git_commit "${DKR_ARCH} pushed"
