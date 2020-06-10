@@ -8,14 +8,14 @@
     "cni": "vendor/cni"
   },
   "scripts": {
-    "test": "cd test && ./build-test.sh && exit 0",
-    "post-install": "scripts/post-install.sh"
+    "test": "cd test && ./build-test.sh && exit 0"
   },
   "bin": {
     "auto_reboot": "vendor/cni/auto_reboot.sh",
     "balena_deploy": "vendor/cni/balena_deploy.sh",
     "docker_build": "vendor/cni/docker_build.sh",
-    "init_functions": "vendor/cni/init_functions.sh"
+    "init_functions": "vendor/cni/init_functions.sh",
+    "post_install": "scripts/post-install.sh"
   },
   "keywords": [
     "balena",
