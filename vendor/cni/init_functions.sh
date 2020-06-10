@@ -51,7 +51,8 @@ LOG_MAX_ROLLOUT=${LOG_MAX_ROLLOUT:-500}
 # @param 1 folder
 # @param 2 filename
 function new_log() {
-  LOG="$(cd "${1:-"/tmp/log/$(basename "$0" .sh)"}" && pwd)/${2:-"$(date +%Y-%m-%d_%H:%M).log"}" \
+  temp="/tmp/log/$(basename "$0" .sh)"
+  LOG="$(cd "${1:-$temp}" && pwd)/${2:-"$(date +%Y-%m-%d_%H:%M).log"}" \
   && mkdir -p "$(dirname "$LOG")"
   touch "$LOG" && chmod 4766 "$LOG" # sticky bit
   [ "${DEBUG:-0}" = 0 ] && [ "$(log_size "$LOG" | cut -d= -f2)" -gt "$LOG_MAX_ROLLOUT" ] \

@@ -9,7 +9,7 @@ banner=("" "[$0] BASH ${BASH_SOURCE[0]}" "$project_root" ""); printf "%s\n" "${b
 . "$(command -v init_functions)" "${BASH_SOURCE[0]}"
 [ "${DEBUG:-0}" != 0 ] && log_daemon_msg "passed args $*"
 
-LOG=${LOG:-"$(new_log "" "$(basename "$project_root").log")"}
+LOG=${LOG:-"$(new_log "." "$(basename "$project_root").log")"}
 usage=("" \
 "Usage ${BASH_SOURCE[0]}  [1|2|3|<arch>] [1,--local|2,--balena|3,--nobuild|4,--docker|5,--push] [0,--exit]" \
 "                         1|arm32*|armv7l|armhf   ARMv7 OS" \
