@@ -12,21 +12,21 @@ function test_deploy() {
   args=("3" --nobuild --exit)
   # shellcheck disable=SC1090
   . "$vendord/balena_deploy.sh" "$testd" "${args[@]}" >> "$LOG"
-  grep -q "intel-nuc" < "$testd/docker-compose.x86_64" || true
+  grep -q "intel-nuc" < "$testd/submodule/Dockerfile.x86_64"
 }
 function test_deploy_2() {
   # aarch64
   args=("2" --nobuild --exit)
   # shellcheck disable=SC1090
   . "$vendord/balena_deploy.sh" "$testd" "${args[@]}" >> "$LOG"
-  grep -q "generic-aarch64" < "$testd/docker-compose.aarch64" || true
+  grep -q "generic-aarch64" < "$testd/submodule/Dockerfile.aarch64"
 }
 function test_deploy_3() {
   # armhf
   args=("1" --nobuild --exit)
   # shellcheck disable=SC1090
   . "$vendord/balena_deploy.sh" "$testd" "${args[@]}" >> "$LOG"
-  grep -q "raspberrypi3" < "$testd/docker-compose.armhf" || true
+  grep -q "raspberrypi3" < "$testd/submodule/Dockerfile.armhf"
 }
 function test_docker_3() {
   args=("${testd}/submodule" -m . "betothreeprod/raspberrypi3" "$DKR_ARCH")

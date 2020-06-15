@@ -62,7 +62,7 @@ DKR_ARCH=${arch}
 ln -vsf "$project_root/${DKR_ARCH}.env" "$project_root/.env" >> "$LOG"
 # shellcheck disable=SC1090
 . "$project_root/.env" && . "$project_root/common.env"
-### ADD HERE ANY ENVIRONMENT VARIABLE TO DEPLOYMENTS
+### ADD ANY ENVIRONMENT VARIABLE TO BALENA_PROJECTS_FLAGS
 flags=()
 if [ -n "$BALENA_PROJECTS_FLAGS" ]; then
   log_daemon_msg "Found ${#BALENA_PROJECTS_FLAGS[@]} flags set BALENA_PROJECTS_FLAGS" >> "$LOG"
@@ -85,24 +85,17 @@ function setArch() {
     sed -E -f "$1.sed" "$1" > "$2"
   shift 2; done
 }
-### ADD HERE ANY SUBMODULE DOCKER IMAGE / SERVICE TO DEPLOYMENTS
+### ADD ANY SUBMODULE DOCKER IMAGE / SERVICE TO BALENA_PROJECTS
 projects=(".")
 if [ "${#BALENA_PROJECTS[@]}" -gt 0 ]; then
   log_daemon_msg "Found ${#BALENA_PROJECTS[@]} projects set BALENA_PROJECTS"  >> "$LOG"
   projects=("${BALENA_PROJECTS[@]}")
 fi
-### ADD HERE ANY DEPLOYMENT DEPENDENCIES COMMAND LINES
-DEPLOY_DEPS=(\
-"deployment/images/primary ${PRIMARY_HUB:-'PRIMARY_HUB'} ${DKR_ARCH}" \
-"deployment/images/secondary ${SECONDARY_HUB:-'SECONDARY_HUB'} ${DKR_ARCH}" \
-)
 function deploy_deps() {
-  for d in "${DEPLOY_DEPS[@]}"; do
-    if printf "%s" "$d" | grep -q "_HUB"; then
-      :
-    else
-      docker_build "${project_root}" "$d" >> "$LOG" 2>&1 || true;
-    fi
+  mapfile -t dock < <(find "${project_root}/deployment/images" -name "Dockerfile*")
+  for d in "${dock[@]}"; do
+    dir=$(dirname "$d")
+    docker_build "$dir" "." "$DOCKER_USER/$(basename "$dir")" "${DKR_ARCH}" >> "$LOG" 2>&1 || true
   done
 }
 ### ADD HERE ### A MARKER STARTS... ### A MARKER ENDS
