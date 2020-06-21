@@ -28,10 +28,13 @@ usage=("" \
 "                                                 machine. Docker CE must be installed." \
 "                                                 Balena Library enables ARM Cross-Build." \
 "                         5,--push                Push latest changes to Github." \
+"                         6,--build-deps          Deployment images dependencies build." \
 "                         0,--exit                Quit script (non interactive)." \
 "" \
-"Set BALENA_PROJECTS=(./dir_one ./dir_two ./dir_three) in common.env file." \
-"Set BALENA_PROJECTS_FLAGS=(VAR_ONE VAR_TWO)" \
+"Deployment images        Set BALENA_PROJECTS=(./dir_one ./dir_two ./dir_three)" \
+"                         in common.env file." \
+"Variable filters         Set BALENA_PROJECTS_FLAGS=(VAR_ONE VAR_TWO)" \
+"                         in common.env" \
 "")
 arch=${1:-''}
 saved=("${@:2}")
@@ -95,7 +98,7 @@ function deploy_deps() {
   mapfile -t dock < <(find "${project_root}/deployment/images" -name "Dockerfile*")
   for d in "${dock[@]}"; do
     dir=$(dirname "$d")
-    docker_build "$dir" "." "$DOCKER_USER/$(basename "$dir")" "${DKR_ARCH}" >> "$LOG" 2>&1 || true
+    docker_build "$dir" "." "$DOCKER_USER/$(basename "$dir")" "${DKR_ARCH}"
   done
 }
 ### ADD HERE ### A MARKER STARTS... ### A MARKER ENDS
@@ -239,7 +242,6 @@ while true; do
     1|--local)
       slogger -st docker "Allow cross-build"
       cross_build_start
-      deploy_deps
       native_compose_file_set
       if command -v balena; then
         # shellcheck disable=SC2046
@@ -252,7 +254,6 @@ while true; do
     4|--docker)
       slogger -st docker "Allow cross-build"
       cross_build_start
-      deploy_deps
       file=docker-compose.${DKR_ARCH}
       if [ -f "$file" ]; then
         bash -c "docker-compose -f $file --host ${DOCKER_HOST:-''} build"  >> "$LOG"
@@ -263,7 +264,6 @@ while true; do
     2|--balena)
       slogger -st docker "Deny cross-build"
       cross_build_start -d
-      deploy_deps
       native_compose_file_set
       if command -v balena > /dev/null; then
         # shellcheck disable=SC2046
@@ -280,6 +280,11 @@ while true; do
       ;;
     5|--push)
       git push --recurse-submodules=on-demand
+      ;;
+    6|--build-deps)
+      slogger -st docker "Allow cross-build" >> "$LOG"
+      cross_build_start
+      deploy_deps
       ;;
     0|--exit)
       log_daemon_msg "deploy's exiting..." >> "$LOG"
