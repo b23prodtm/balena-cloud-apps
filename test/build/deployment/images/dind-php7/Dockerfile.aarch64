@@ -1,4 +1,4 @@
-FROM node:lts-alpine
+FROM docker:dind
 RUN apk update \
     && apk add \
     bash \
@@ -37,19 +37,26 @@ RUN apk update \
     php7-xmlwriter \
     php7-fpm \
     php7-zlib \
-    py-pip \
-    python-dev \
+    php7-session \
+    py3-pip \
+    python3-dev \
     libffi-dev \
     openssl-dev \
     gcc \
     libc-dev \
     make \
     mariadb-client \
+    mariadb-connector-c \
+    \
+    python3 \
+    git \
+    make \
+    g++ \
     && apk del build-base \
     && rm -rf /var/cache/apk/*
 # Make sure the nginx and php-fpm7 (FASTCGI server) starts when system reboots
 # RUN rc-update add php-fpm7 default
 # RUN rc-service php-fpm7 start
-RUN LIBSODIUM_MAKE_ARGS=-j4 pip install docker-compose
+RUN LIBSODIUM_MAKE_ARGS=-j4 pip3 install docker-compose
 RUN docker-compose --version
 WORKDIR /var/www/html/

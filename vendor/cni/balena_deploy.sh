@@ -95,7 +95,7 @@ if [ "${#BALENA_PROJECTS[@]}" -gt 0 ]; then
   projects=("${BALENA_PROJECTS[@]}")
 fi
 function deploy_deps() {
-  mapfile -t dock < <(find "${project_root}/deployment/images" -name "Dockerfile*")
+  mapfile -t dock < <(find "${project_root}/deployment/images" -name "Dockerfile.${DKR_ARCH}")
   for d in "${dock[@]}"; do
     dir=$(dirname "$d")
     docker_build "$dir" "." "$DOCKER_USER/$(basename "$dir")" "${DKR_ARCH}"
@@ -294,7 +294,8 @@ while true; do
         # try last target
         target=$(grep "$0 $arch" < "$LOG" | tail -1 | cut -d' ' -f3)
       else
-        read -rp "What target docker's going to use (0:exit, 1:local-balena, 2:balena, 3:nobuild, 4:docker, 5:push) ?" target
+        read -rp "What target docker's going to use \
+        (0:exit, 1:local balena, 2:balena, 3:don't build, 4:build, 5:push, 6:build dependencies) ?" target
       fi
       ;;
   esac; shift
