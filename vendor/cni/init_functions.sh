@@ -1,39 +1,37 @@
 #!/usr/bin/env bash
 [ "$#" -eq 0 ] && echo "usage $0 \${BASH_SOURCE[0]} <args>" && exit 0
 banner=("" "[$0] BASH ${BASH_SOURCE[0]}" ""); printf "%s\n" "${banner[@]}"
-
+function log_daemon_msg() {
+  printf "* %s\n" "$@"
+}
+function log_progress_msg() {
+  printf "+ %s\n" "$@"
+}
+function log_warning_msg() {
+  printf "! %s\n" "$@"
+}
+function log_failure_msg() {
+  printf "[!] %s\n" "$@"
+}
+function log_success_msg() {
+  printf "[*] %s\n" "$@"
+}
+function log_end_msg() {
+  case "$1" in
+    0)
+      printf "[>]                            %s\n" "[OK]"
+      ;;
+    [1-9]+)
+      printf "[x]                          %s\n" "[fail]"
+      ;;
+    *) printf "%s\n" "$@"
+      ;;
+  esac
+}
 if [ -f /lib/lsb/init-functions ]; then
   # lsb-base package (not available in alpine linux)
   # shellcheck disable=SC1091
   . /lib/lsb/init-functions
-else
-  function log_daemon_msg() {
-    printf "* %s\n" "$@"
-  }
-  function log_progress_msg() {
-    printf "+ %s\n" "$@"
-  }
-  function log_warning_msg() {
-    printf "! %s\n" "$@"
-  }
-  function log_failure_msg() {
-    printf "[!] %s\n" "$@"
-  }
-  function log_success_msg() {
-    printf "[*] %s\n" "$@"
-  }
-  function log_end_msg() {
-    case "$1" in
-      0)
-        printf "[>]                            %s\n" "[OK]"
-        ;;
-      [1-9]+)
-        printf "[x]                          %s\n" "[fail]"
-        ;;
-      *) printf "%s\n" "$@"
-        ;;
-    esac
-  }
 fi
 # Dsiplay message with time and thread if logger debug Kit available
 function slogger() {
