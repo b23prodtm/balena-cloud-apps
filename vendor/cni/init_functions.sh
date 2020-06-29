@@ -52,8 +52,8 @@ function new_log() {
   temp="/tmp/log/$(basename "$0" .sh)"
   LOG="$(cd "${1:-$temp}" && pwd)/${2:-"$(date +%Y-%m-%d_%H:%M).log"}" \
   && mkdir -p "$(dirname "$LOG")"
-  touch "$LOG" && chmod 4766 "$LOG" # sticky bit
-  [ "${DEBUG:-0}" = 0 ] && [ "$(log_size "$LOG" | cut -d= -f2)" -gt "$LOG_MAX_ROLLOUT" ] \
+  touch "$LOG" && chmod 1777 "$LOG" # sticky bit
+  [ -n ${DEBUG:-} ] && [ "$(log_size "$LOG" | cut -d= -f2)" -gt "$LOG_MAX_ROLLOUT" ] \
   && mv "$LOG" "$LOG.$(date +%Y-%m-%d_%H:%M)" && new_log "$@" \
   && return
   # return value
