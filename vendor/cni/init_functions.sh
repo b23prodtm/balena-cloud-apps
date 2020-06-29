@@ -41,7 +41,7 @@ function slogger() {
 }
 function log_size() {
   [ "$#" = 0 ] && log_failure_msg "File not found" && return
-  log_daemon_msg "num_entries=$(wc -l "$1" | awk '{ print $1 }')"
+  printf "num_entries=%s\n" "$(wc -l "$1" | awk '{ print $1 }')"
 }
 # Journal rotation
 LOG_MAX_ROLLOUT=${LOG_MAX_ROLLOUT:-500}
@@ -53,14 +53,15 @@ function new_log() {
   LOG="$(cd "${1:-$temp}" && pwd)/${2:-"$(date +%Y-%m-%d_%H:%M).log"}" \
   && mkdir -p "$(dirname "$LOG")"
   touch "$LOG" && chmod 1777 "$LOG" # sticky bit
-  [ -n ${DEBUG:-} ] && [[ $(log_size "$LOG" | cut -d= -f2 | printf -v int '%d\n') -gt $LOG_MAX_ROLLOUT ]] \
-  && mv "$LOG" "$LOG.$(date +%Y-%m-%d_%H:%M)" && new_log "$@" \
-  && return
+  if [ -n "${DEBUG:-}" ] && [ "$(log_size "$LOG" | cut -d= -f2)" -gt "$LOG_MAX_ROLLOUT" ]; then
+    mv "$LOG" "$LOG.$(date +%Y-%m-%d_%H:%M)" && new_log "$@"
+    return
+  fi
   # return value
   printf "%s\n" "$LOG"
 }
 function check_log() {
-  if [ -n ${DEBUG:-} ] && [[ $(wc -l "$LOG" | awk '{ print $1 }') -gt 0 ]]; then
+  if [ -n "${DEBUG:-}" ] && [[ $(wc -l "$LOG" | awk '{ print $1 }') -gt 0 ]]; then
     log_daemon_msg "Find the log file at $LOG and read more detailed information."
   fi
 }
