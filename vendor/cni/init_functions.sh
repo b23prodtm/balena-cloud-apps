@@ -53,14 +53,14 @@ function new_log() {
   LOG="$(cd "${1:-$temp}" && pwd)/${2:-"$(date +%Y-%m-%d_%H:%M).log"}" \
   && mkdir -p "$(dirname "$LOG")"
   touch "$LOG" && chmod 1777 "$LOG" # sticky bit
-  [ -n ${DEBUG:-} ] && [ "$(log_size "$LOG" | cut -d= -f2)" -gt "$LOG_MAX_ROLLOUT" ] \
+  [ -n ${DEBUG:-} ] && [[ $(log_size "$LOG" | cut -d= -f2 | printf -v int '%d\n') -gt $LOG_MAX_ROLLOUT ]] \
   && mv "$LOG" "$LOG.$(date +%Y-%m-%d_%H:%M)" && new_log "$@" \
   && return
   # return value
   printf "%s\n" "$LOG"
 }
 function check_log() {
-  if [ "${DEBUG:-0}" = 0 ] && [[ $(wc -l "$LOG" | awk '{ print $1 }') -gt 0 ]]; then
+  if [ -n ${DEBUG:-} ] && [[ $(wc -l "$LOG" | awk '{ print $1 }') -gt 0 ]]; then
     log_daemon_msg "Find the log file at $LOG and read more detailed information."
   fi
 }
