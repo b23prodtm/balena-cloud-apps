@@ -167,7 +167,7 @@ function cross_build_start() {
   fi
   for d in "${projects[@]}"; do
     ln -vsf "$project_root/${DKR_ARCH}.env" "$project_root/$d/.env" >> "$LOG"
-    [ "$(cd "$d" && pwd)" != "$(pwd)" ] && ln -vsf "$project_root/common.env" "$project_root/$d/common.env" >> "$LOG"
+    [ "$(cd "$project_root/$d" && pwd)" != "$(pwd)" ] && ln -vsf "$project_root/common.env" "$project_root/$d/common.env" >> "$LOG"
     setArch "$project_root/$d/Dockerfile.template" "$project_root/$d/Dockerfile.${DKR_ARCH}"
     if [ "$crossbuild" = 0 ]; then
       if [ "$arch" != "x86_64" ]; then
@@ -187,7 +187,7 @@ function cross_build_start() {
         comment "$project_root/$d/Dockerfile.${DKR_ARCH}"
       fi
     fi
-    [ "$(cd "$d" && pwd)" != "$(pwd)" ] && cd "$project_root/$d" && git_commit "${DKR_ARCH} pushed ${d}"
+    [ "$(cd "$project_root/$d" && pwd)" != "$(pwd)" ] && cd "$project_root/$d" && git_commit "${DKR_ARCH} pushed ${d}"
     cd "$project_root" || return
   done
   git_commit "${DKR_ARCH} pushed"
