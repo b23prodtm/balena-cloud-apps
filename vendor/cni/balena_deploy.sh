@@ -81,8 +81,8 @@ function setArch() {
     printf "%s\n" "${sed[@]}" >> "$1.sed"
     for flag in "${flags[@]}"; do
       flag_val=$(eval "echo \${$flag}")
-      sed=("s/(${flag}[=:-]+)[^\$ }]+/\\1${flag_val}/g" \
-      "s/%%${flag}%%/${flag_val}/g" )
+      sed=("s#(${flag}[=:-]+)[^\$ }]+#\\1${flag_val}#g" \
+      "s#%%${flag}%%#${flag_val}#g" )
       printf "%s\n" "${sed[@]}" >> "$1.sed"
     done
     sed -E -f "$1.sed" "$1" > "$2"
