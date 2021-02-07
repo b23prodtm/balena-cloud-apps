@@ -14,20 +14,21 @@ post_install
 ```
 
 ### Set Environment Variables
-Make changes to the Dockerfile, common.env and <arch>.env files (BALENA_PROJECTS_FLAGS for adding %%templates_var%% to your Dockerfile)
+Make changes to the Dockerfile, `common.env` and `<arch>.env` files
 
 Complete these common definitions:
 ```common.env
 BALENA_PROJECTS=(MY/PATH MY/RELATIVE/PATH)
 BALENA_PROJECTS_FLAGS=(BALENA_MACHINE_NAME MY_VARIABLE)
 ```
-Define architectures: ARM and Raspberry PI is armhf (or aarch64), PC/MAC/Linux are often x86_64:
+Define architectures: ARM computer units like Raspberry PI use `armhf.env` (or `aarch64.env` if set deployed on a 64 bits platform), desktop units are often `x86_64.env`:
 ```x86_64.env
 DKR_ARCH=x86_64
 BALENA_MACHINE_NAME=intel-nuc
 IMG_TAG=latest
 PRIMARY_HUB=docker-hub-balenalib-repo\\/container-servìce-image
 ```
+Template fields (`BALENA_PROJECTS_FLAGS`) take variable names `%%templates_var%%` that are replaced by ther value in `<arch>.env`
 
 ## Test
 Run unit tests on local host or CI
