@@ -1,7 +1,7 @@
 # balena-cloud
 [![Balena-Cloud](https://circleci.com/gh/b23prodtm/balena-cloud.svg?style=shield)](https://app.circleci.com/pipelines/github/b23prodtm/balena-cloud)
- Shell scripts package to the containers native interface BalenaOS for the Raspberry Pi.
- Containers pushes to the official [Balena-CLI](https://github.com/balena-io/balena-cli) and also builds to the docker Hub registry.
+ This is a free NodeJS script to package the containers native interface BalenaOS for the Raspberry Pi and similar platforms.
+The open source [Balena-CLI](https://github.com/balena-io/balena-cli) is required, for it stacks image dependencies in the public Docker Hub registry.
 
 Within an open source application, like  [balena-sound](https://github.com/balenalabs/balena-sound), [wifi-repeater](https://github.com/balenalabs-incubator/wifi-repeater), install this module:
 ```Shell
@@ -10,7 +10,7 @@ cd application
 npm install balena-cloud
 ```
 
-## Set Environment Variables
+### Set Environment Variables
 Make changes to the Dockerfile, `common.env` and `<arch>.env` files
 
 Complete common definitions:
@@ -35,11 +35,9 @@ Write changes to package.json:
 # Test
 Run unit tests on local host or CI
 
-    cd test
-    # DEBUG=1
-    ./build-tests.sh
+    npm test
 
-## Build dependencies
+### Build dependencies
 Docker Image dependencies are required to validate test units. Theses dependencies include build images needed by Docker based environments:
   - Docker and cloud platform (BalenaOS, etc.)
   - CircleCI, TravisCI, etc.
