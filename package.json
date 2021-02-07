@@ -1,11 +1,10 @@
 {
   "name": "balena-cloud",
-  "version": "1.0.23",
+  "version": "1.0.25",
   "description": "Shell scripts package to the containers native interface BalenaOS for the Raspberry Pi.",
   "main": "index.js",
   "directories": {
-    "test": "test",
-    "cni": "vendor/cni"
+    "test": "test"
   },
   "scripts": {
     "test": "cd test && ./build-test.sh && exit 0"
@@ -29,12 +28,18 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git@github.com:b23prodtm/balena-cloud.git"
+    "url": "git+ssh://git@github.com/b23prodtm/balena-cloud.git"
   },
   "optionalDependencies": {
     "balena-cli": "latest"
   },
   "dependencies": {
-    "shelljs": "^0.8.4"
-  }
+    "shelljs": "^0.8.4",
+    "balena-cli": "latest"
+  },
+  "bugs": {
+    "url": "https://github.com/b23prodtm/balena-cloud/issues"
+  },
+  "homepage": "https://github.com/b23prodtm/balena-cloud#readme",
+  "devDependencies": {}
 }
