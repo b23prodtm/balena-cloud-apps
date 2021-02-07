@@ -49,9 +49,10 @@ First login to Docker, if you already have an account or [create one](https://hu
     
 The folder `deployments` contains Dockerfile templates that maybe pulled from Docker.
 
-    balena_deploy test/build/deployment/images/dind-php7/
+    balena_deploy test/build/
 
-Select the corresponding architecture et choose to `build dependencies`
+Finally select the corresponding architecture `ARM32, ARM64 bits or X86-64 (choose 1, 2 or 3)` and choose to `build dependencies`
+
 It takes a few minutes for the docker machine to pull, update local images and to push them to the repository. They take the name `$DOCKER_USER/<image>` and get a public URL at `https://hub.docker.com/r/$DOCKER_USER/<image>`
 
 ## Deploy
