@@ -10,8 +10,17 @@ cd application
 npm install balena-cloud
 ```
 
-### Set Environment Variables
-Make changes to the Dockerfile, `common.env` and `<arch>.env` files
+### Template fields 
+(`BALENA_PROJECTS_FLAGS`) take variable names `%%templates_var%%` that are replaced by ther value in `<arch>.env`
+Make changes to the Dockerfile.template files.
+
+Initialize .env and package.json:
+
+    post_install
+
+> It will scan for any Docker files in the sub-folders and reset package.json, `common.env` and `<arch>.env` files.
+
+### Configure template environment
 
 Complete common definitions:
 ```common.env
@@ -26,11 +35,6 @@ BALENA_MACHINE_NAME=intel-nuc
 IMG_TAG=latest
 PRIMARY_HUB=docker-hub-balenalib-repo\\/container-servìce-image
 ```
-Template fields (`BALENA_PROJECTS_FLAGS`) take variable names `%%templates_var%%` that are replaced by ther value in `<arch>.env`
-
-Write changes to package.json:
-
-    post_install
 
 # Test
 Run unit tests on local host or CI
