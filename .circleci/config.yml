@@ -15,13 +15,13 @@ jobs:
         command: git submodule sync
     - run:
         command: git submodule update --init --recursive
-    - attach_workspace:
-        at: test
     - setup_remote_docker:
         docker_layer_caching: false
     - run:
         command: |
           set -u
+          cp vendor/cni/init_functions.sh /usr/local/bin/init_functions
+          chmod +x /usr/local/bin/init_functions
           cd test || true
           ./build-test.sh
     - store_test_results:
@@ -33,7 +33,6 @@ workflows:
     jobs:
       - shellcheck/check:
           ignore: 'SC1091'
-          exclude: './ubuntu*.sh'
   build-and-compose:
     jobs:
     - compose:

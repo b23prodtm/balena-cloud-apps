@@ -1,16 +1,66 @@
 # balena-cloud
 [![Balena-Cloud](https://circleci.com/gh/b23prodtm/balena-cloud.svg?style=shield)](https://app.circleci.com/pipelines/github/b23prodtm/balena-cloud)
- Shell scripts package of containers native interface from Balena Cloud
+ This is a free NodeJS script to package the containers native interface BalenaOS for the Raspberry Pi and similar platforms.
+## The open source [Balena-CLI](https://github.com/balena-io/balena-cli) is required, first install Balena-CLI on the host that's sending command lines.
 
-## Usage
+Within an open source application, like  [balena-sound](https://github.com/balenalabs/balena-sound), [wifi-repeater](https://github.com/balenalabs-incubator/wifi-repeater), install this module:
 ```Shell
 #!/usr/bin/env bash
+cd application
 npm install balena-cloud
 ```
-Copy test/build/ folder to the root folder of your project
-Make changes to the Dockerfile, common.env and <arch>.env files
 
-Deploy to balena
+### Template fields 
+(`BALENA_PROJECTS_FLAGS`) take variable names `%%templates_var%%` that are replaced by ther value in `<arch>.env`
+Make changes to the Dockerfile.template files.
+
+Initialize .env and package.json:
+
+    post_install
+
+> It will scan for any Docker files in the sub-folders and reset package.json, `common.env` and `<arch>.env` files.
+
+### Configure template environment
+
+Complete common definitions:
+```common.env
+BALENA_PROJECTS=(MY/PATH MY/RELATIVE/PATH)
+BALENA_PROJECTS_FLAGS=(BALENA_MACHINE_NAME MY_VARIABLE)
+```
+Define architectures: 
+An ARM computer units like Raspberry PI use `armhf.env` (or `aarch64.env` if it's deployed on a 64 bits platform), desktop units are often `x86_64.env`:
+```x86_64.env
+DKR_ARCH=x86_64
+BALENA_MACHINE_NAME=intel-nuc
+IMG_TAG=latest
+PRIMARY_HUB=docker-hub-balenalib-repo\\/container-servìce-image
+```
+
+# Test
+Run unit tests on local host or CI
+
+    npm test
+
+### Build dependencies
+Docker Image dependencies are required to validate test units. Theses dependencies include build images needed by Docker based environments:
+  - Docker and cloud platform (BalenaOS, etc.)
+  - CircleCI, TravisCI, etc.
+  - Kubernetes and similar (Openshift, Micro-k8s, etc.)
+
+First login to Docker, if you already have an account or [create one](https://hub.docker.com).
+
+    docker login
+    
+The folder `deployments` contains Dockerfile templates that maybe pulled from Docker.
+
+    balena_deploy test/build/
+
+Finally select the corresponding architecture `ARM32, ARM64 bits or X86-64 (choose 1, 2 or 3)` and choose to `build dependencies`
+
+It takes a few minutes for the docker machine to pull, update local images and to push them to the repository. They take the name `$DOCKER_USER/<image>` and get a public URL at `https://hub.docker.com/r/$DOCKER_USER/<image>`
+
+## Deploy
+Deploy to Docker or BalenOS, easy, choose targets:
 
     balena_deploy .
 
@@ -23,23 +73,7 @@ In BASH scripts, use arguments:
 balena_deploy . x86_64 --nobuild --exit
 balena_deploy . armhf --balena
 ```
-## Environment Variables
-There are some data information to complete and describe the project.
-It follows that:
-```common.env
-BALENA_PROJECTS=(MY/PATH MY/RELATIVE/PATH)
-BALENA_PROJECTS_FLAGS=(BALENA_MACHINE_NAME MY_VARIABLE)
-```
-Architectures: ARM is armhf and aarch64, INTEL/AMD is x86_64
-```x86_64.env
-DKR_ARCH=x86_64
-BALENA_MACHINE_NAME=intel-nuc
-IMG_TAG=latest
-PRIMARY_HUB=docker-hub-balenalib-repo\\/container-servìce-image
-```
-## Test
-Run unit tests on local host or CI
 
-    cd test
-    # DEBUG=1
-    ./build-tests.sh
+# Updating and managing npm version
+Follow general guidelines in the documention about [versioning this project on npm](https://docs.npmjs.com/packages-and-modules/updating-and-managing-your-published-packages)
+

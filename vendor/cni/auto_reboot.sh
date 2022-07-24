@@ -16,6 +16,7 @@ if [ ! -f /etc/os-releases ] \
 || [ "$(grep -q "ID=" < /etc/os-releases)" != "debian" ] \
 && [ "$(grep -q "ID=" < /etc/os-releases)" != "ubuntu" ]; then
     echo -e "This script only made for Debian and Ubuntu linux"
+    exit 3
 fi
 
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin

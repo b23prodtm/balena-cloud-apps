@@ -2,10 +2,10 @@ ARG BALENA_MACHINE_NAME
 FROM balenalib/${BALENA_MACHINE_NAME:-raspberrypi3}:latest
 ARG DKR_ARCH
 ENV DKR_ARCH ${DKR_ARCH:-armhf}
-# RUN ["cross-build-start"]
+RUN ["cross-build-start"]
 
 RUN printf "* %s VM, %s IMAGE" "$(arch)" "$DKR_ARCH"
 
-# RUN ["cross-build-end"]
+RUN ["cross-build-end"]
 
 CMD true

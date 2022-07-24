@@ -1,3 +1,0 @@
-FROM node:lts-alpine
-ARG DKR_ARCH
-ENV DKR_ARCH ${DKR_ARCH:-x86_64}
