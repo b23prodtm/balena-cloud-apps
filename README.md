@@ -1,7 +1,7 @@
 # balena-cloud
 [![Balena-Cloud](https://circleci.com/gh/b23prodtm/balena-cloud.svg?style=shield)](https://app.circleci.com/pipelines/github/b23prodtm/balena-cloud)
  This is a free NodeJS script to package the containers native interface BalenaOS for the Raspberry Pi and similar platforms.
-The open source [Balena-CLI](https://github.com/balena-io/balena-cli) is required, for it stacks image dependencies in the public Docker Hub registry.
+## The open source [Balena-CLI](https://github.com/balena-io/balena-cli) is required, first install Balena-CLI on the host that's sending command lines.
 
 Within an open source application, like  [balena-sound](https://github.com/balenalabs/balena-sound), [wifi-repeater](https://github.com/balenalabs-incubator/wifi-repeater), install this module:
 ```Shell
