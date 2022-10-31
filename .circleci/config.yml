@@ -1,40 +1,72 @@
+
+# Javascript Node CircleCI 2.0 configuration file
+#
+# Check {{ '/language-javascript' | docs_url }} for more details
+#
 version: 2.1
 orbs:
   shellcheck: circleci/shellcheck@1.3.16
 
+defaults: &defaults
+  working_directory: ~/repo
+  docker:
+    - image: circleci/node:8.9.1
+
 jobs:
-  compose:
-    docker:
-    - image: betothreeprod/dind-php7
-    shell: /bin/bash -leo pipefail
-    environment:
-    - BASH_ENV: /etc/profile
+  test:
+    <<: *defaults
     steps:
-    - checkout
-    - run:
-        command: git submodule sync
-    - run:
-        command: git submodule update --init --recursive
-    - setup_remote_docker:
-        docker_layer_caching: false
-    - run:
-        command: |
-          set -u
-          cp vendor/cni/init_functions.sh /usr/local/bin/init_functions
-          chmod +x /usr/local/bin/init_functions
-          cd test || true
-          ./build-test.sh
-    - store_test_results:
-        path: ~/phpunit
-    - store_artifacts:
-        path: ~/phpunit
+      - checkout
+
+      - restore_cache:
+          keys:
+          - v1-dependencies-{{ checksum "package.json" }}
+	  # fallback to using the latest cache if no exact match is found
+          - v1-dependencies-
+
+      - run: npm install
+      - run:
+          name: Run tests
+          command: npm test
+
+      - save_cache:
+          paths:
+            - node_modules
+          key: v1-dependencies-{{ checksum "package.json" }}
+
+      - persist_to_workspace:
+          root: ~/repo
+          paths: .
+  deploy:
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: ~/repo
+      - run:
+          name: Authenticate with registry
+          command: echo "//registry.npmjs.org/:_authToken=$npm_TOKEN" > ~/repo/.npmrc
+      - run:
+          name: Publish package
+          command: npm publish
+
 workflows:
   cleanup:
     jobs:
       - shellcheck/check:
           ignore: 'SC1091'
-  build-and-compose:
+  test-deploy:
     jobs:
-    - compose:
-        context: Info-b23prodtm
-  version: 2
+      - shellcheck/check:
+          ignore: 'SC1091'
+      - test:
+          filters:
+            tags:
+              only: /^v.*/
+      - deploy:
+          requires:
+            - test
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
