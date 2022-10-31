@@ -53,10 +53,12 @@ jobs:
           at: ~/repo
       - run:
           name: Authenticate with registry
-          command: echo "//registry.npmjs.org/:_authToken=$npm_TOKEN" > ~/repo/.npmrc
+          command: echo "//npm.pkg.github.com/:_authToken=$gh_TOKEN" > ~/repo/.npmrc
       - run:
           name: Publish package
-          command: npm publish
+          command: |
+            npm ci
+            npm publish
 
 workflows:
   cleanup:
