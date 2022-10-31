@@ -14,7 +14,8 @@
     "balena_deploy": "vendor/cni/balena_deploy.sh",
     "docker_build": "vendor/cni/docker_build.sh",
     "init_functions": "vendor/cni/init_functions.sh",
-    "post_install": "vendor/cni/post_install.sh"
+    "post_install": "vendor/cni/post_install.sh",
+    "git_retag": "vendor/cni/git_retag.sh"
   },
   "keywords": [
     "balena",
