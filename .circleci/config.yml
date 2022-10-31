@@ -30,9 +30,12 @@ jobs:
       - run:
           name: Run tests
           command: |
+            if [[ $EUID == 0 ]]; then export SUDO=""; else # Check if we are root
+              export SUDO="sudo";
+            fi
             set -e
-            cp vendor/cni/init_functions.sh /usr/local/bin/init_functions
-            chmod +x /usr/local/bin/init_functions
+            $SUDO cp vendor/cni/init_functions.sh /usr/local/bin/init_functions
+            $SUDO chmod +x /usr/local/bin/init_functions
             npm test
 
       - save_cache:
