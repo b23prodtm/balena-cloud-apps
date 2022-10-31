@@ -29,7 +29,11 @@ jobs:
       - run: npm install
       - run:
           name: Run tests
-          command: npm test
+          command: |
+            set -e
+            cp vendor/cni/init_functions.sh /usr/local/bin/init_functions
+            chmod +x /usr/local/bin/init_functions
+            npm test
 
       - save_cache:
           paths:
