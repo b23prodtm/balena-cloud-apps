@@ -10,7 +10,7 @@ orbs:
 defaults: &defaults
   working_directory: ~/repo
   docker:
-    - image: circleci/node:8.9.1
+    - image: cimg/node:8.9.1
       auth:
         username: $DOCKER_USER
         password: $DOCKER_PASS
