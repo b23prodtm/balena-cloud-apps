@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -u
+set +u
 [ "$#" -eq 0 ] && echo "usage $0 <project_root|\${BASH_SOURCE[0]}> <args>" && exit 0
 [ -f "$1" ] && set -- "$(cd "$(dirname "$1")" && pwd)" "${@:2}"
 project_root="$(cd "$1" && pwd)"; shift
@@ -202,16 +202,8 @@ function git_commit() {
 }
 function native_compose_file_set() {
   if [ "$#" -gt 0 ]; then
-    case $1 in
-      -[d]*)
-        cp -vf "$project_root/docker-compose.yml.old" "$project_root/docker-compose.yml"
-        ;;
-      *)
-        cp -vf "$project_root/docker-compose.yml" "$project_root/docker-compose.yml.old"
-        setArch "$project_root/docker-compose.yml" "$project_root/docker-compose.${DKR_ARCH}"
-        cp -vf "$project_root/docker-compose.$1" "$project_root/docker-compose.yml"
-        ;;
-    esac
+    setArch "$project_root/docker-compose.template" "$project_root/docker-compose.${DKR_ARCH}"
+    cp -vf "$project_root/docker-compose.$1" "$project_root/docker-compose.yml"
   else
     native_compose_file_set "${DKR_ARCH}"
   fi
