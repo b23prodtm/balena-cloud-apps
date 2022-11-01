@@ -53,7 +53,10 @@ jobs:
           at: ~/repo
       - run:
           name: Authenticate with registry
-          command: echo "//npm.pkg.github.com/:_authToken=$gh_TOKEN" > ~/repo/.npmrc
+          command: |
+            npm config set @b23prodtm:registry https://npm.pkg.github.com
+            npm config set //npm.pkg.github.com/:_authToken=$gh_TOKEN
+            npm config set //registry.npmjs.org/:_authToken=$npm_TOKEN
       - run:
           name: Publish package
           command: |
