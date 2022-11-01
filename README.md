@@ -1,5 +1,5 @@
-# balena-cloud
-[![Balena-Cloud](https://circleci.com/gh/b23prodtm/balena-cloud.svg?style=shield)](https://app.circleci.com/pipelines/github/b23prodtm/balena-cloud)
+# balena-cloud-apps
+[![balena-cloud-apps](https://circleci.com/gh/b23prodtm/balena-cloud-apps.svg?style=shield)](https://app.circleci.com/pipelines/github/b23prodtm/balena-cloud-apps)
  This is a free NodeJS script to package the containers native interface BalenaOS for the Raspberry Pi and similar platforms.
 ## The open source [Balena-CLI](https://github.com/balena-io/balena-cli) is required, first install Balena-CLI on the host that's sending command lines.
 
@@ -7,7 +7,7 @@ Within an open source application, like  [balena-sound](https://github.com/balen
 ```Shell
 #!/usr/bin/env bash
 cd application
-npm install balena-cloud
+npm install balena-cloud-apps
 ```
 
 ### Template fields 
