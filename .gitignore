@@ -6,5 +6,5 @@
 test/build/init_functions
 node_modules
 build.log
-balena-cloud.log
+balena-cloud-apps.log
 dind-php7.log
