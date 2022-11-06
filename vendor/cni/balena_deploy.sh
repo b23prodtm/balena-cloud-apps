@@ -52,7 +52,7 @@ while true; do
     *)
       printf "%s\n" "${usage[@]}"
       if [ "${DEBIAN_FRONTEND:-}" = 'noninteractive' ]; then
-        arch=$(grep "DKR_ARCH" < "$project_root/.env"| cut -d= -f2)
+        arch=$(grep "BALENA_ARCH" < "$project_root/.env"| cut -d= -f2)
       else
         read -rp "Set docker machine architecture ARM32, ARM64 bits or X86-64 (choose 1, 2 or 3) ? " arch
       fi
@@ -60,9 +60,9 @@ while true; do
   esac
   log_progress_msg "Architecture $arch was selected"
 done
-DKR_ARCH=${arch}
-[ ! -f "$project_root/${DKR_ARCH}.env" ] && log_failure_msg "Missing arch file ${DKR_ARCH}.env" && exit 1
-ln -vsf "$project_root/${DKR_ARCH}.env" "$project_root/.env" >> "$LOG"
+BALENA_ARCH=${arch}
+[ ! -f "$project_root/${BALENA_ARCH}.env" ] && log_failure_msg "Missing arch file ${BALENA_ARCH}.env" && exit 1
+ln -vsf "$project_root/${BALENA_ARCH}.env" "$project_root/.env" >> "$LOG"
 # shellcheck disable=SC1090
 . "$project_root/.env" && . "$project_root/common.env"
 ### ADD ANY ENVIRONMENT VARIABLE TO BALENA_PROJECTS_FLAGS
@@ -75,9 +75,9 @@ function setArch() {
   while [ "$#" -gt 1 ]; do
     cat /dev/null > "$1.sed"
     sed=("s/%%BALENA_MACHINE_NAME%%/${BALENA_MACHINE_NAME}/g" \
-    "s/(Dockerfile\.)[^\.]*/\\1${DKR_ARCH}/g" \
-    "s/%%BALENA_ARCH%%/${DKR_ARCH}/g" \
-    "s/(DKR_ARCH[=:-]+)[^\$ }]+/\\1${DKR_ARCH}/g" )
+    "s/(Dockerfile\.)[^\.]*/\\1${BALENA_ARCH}/g" \
+    "s/%%BALENA_ARCH%%/${BALENA_ARCH}/g" \
+    "s/(BALENA_ARCH[=:-]+)[^\$ }]+/\\1${BALENA_ARCH}/g" )
     printf "%s\n" "${sed[@]}" >> "$1.sed"
     for flag in "${flags[@]}"; do
       flag_val=$(eval "echo \${$flag}")
@@ -95,10 +95,10 @@ if [ "${#BALENA_PROJECTS[@]}" -gt 0 ]; then
   projects=("${BALENA_PROJECTS[@]}")
 fi
 function deploy_deps() {
-  mapfile -t dock < <(find "${project_root}/deployment/images" -name "Dockerfile.${DKR_ARCH}")
+  mapfile -t dock < <(find "${project_root}/deployment/images" -name "Dockerfile.${BALENA_ARCH}")
   for d in "${dock[@]}"; do
     dir=$(dirname "$d")
-    docker_build "$dir" "." "$DOCKER_USER/$(basename "$dir")" "${DKR_ARCH}"
+    docker_build "$dir" "." "$DOCKER_USER/$(basename "$dir")" "${BALENA_ARCH}"
   done
 }
 ### ADD HERE ### A MARKER STARTS... ### A MARKER ENDS
@@ -166,31 +166,31 @@ function cross_build_start() {
     log_progress_msg "$MARK_BEGIN" >> "$LOG"
   fi
   for d in "${projects[@]}"; do
-    ln -vsf "$project_root/${DKR_ARCH}.env" "$project_root/$d/.env" >> "$LOG"
+    ln -vsf "$project_root/${BALENA_ARCH}.env" "$project_root/$d/.env" >> "$LOG"
     [ "$(cd "$project_root/$d" && pwd)" != "$(pwd)" ] && ln -vsf "$project_root/common.env" "$project_root/$d/common.env" >> "$LOG"
-    setArch "$project_root/$d/Dockerfile.template" "$project_root/$d/Dockerfile.${DKR_ARCH}"
+    setArch "$project_root/$d/Dockerfile.template" "$project_root/$d/Dockerfile.${BALENA_ARCH}"
     if [ "$crossbuild" = 0 ]; then
       if [ "$arch" != "x86_64" ]; then
-        comment "$project_root/$d/Dockerfile.${DKR_ARCH}" -c
-        uncomment "$project_root/$d/Dockerfile.${DKR_ARCH}" -a
-        uncomment "$project_root/docker-compose.${DKR_ARCH}" -a
+        comment "$project_root/$d/Dockerfile.${BALENA_ARCH}" -c
+        uncomment "$project_root/$d/Dockerfile.${BALENA_ARCH}" -a
+        uncomment "$project_root/docker-compose.${BALENA_ARCH}" -a
       else
-        comment "$project_root/$d/Dockerfile.${DKR_ARCH}"
-        comment "$project_root/docker-compose.${DKR_ARCH}"
+        comment "$project_root/$d/Dockerfile.${BALENA_ARCH}"
+        comment "$project_root/docker-compose.${BALENA_ARCH}"
       fi
     else
       if [ "$arch" != "x86_64" ]; then
-        uncomment "$project_root/docker-compose.${DKR_ARCH}"
-        uncomment "$project_root/$d/Dockerfile.${DKR_ARCH}"
+        uncomment "$project_root/docker-compose.${BALENA_ARCH}"
+        uncomment "$project_root/$d/Dockerfile.${BALENA_ARCH}"
       else
-        comment "$project_root/docker-compose.${DKR_ARCH}"
-        comment "$project_root/$d/Dockerfile.${DKR_ARCH}"
+        comment "$project_root/docker-compose.${BALENA_ARCH}"
+        comment "$project_root/$d/Dockerfile.${BALENA_ARCH}"
       fi
     fi
-    [ "$(cd "$project_root/$d" && pwd)" != "$(pwd)" ] && cd "$project_root/$d" && git_commit "${DKR_ARCH} pushed ${d}"
+    [ "$(cd "$project_root/$d" && pwd)" != "$(pwd)" ] && cd "$project_root/$d" && git_commit "${BALENA_ARCH} pushed ${d}"
     cd "$project_root" || return
   done
-  git_commit "${DKR_ARCH} pushed"
+  git_commit "${BALENA_ARCH} pushed"
 }
 function git_commit() {
   if ! git config user.email > /dev/null; then
@@ -202,10 +202,10 @@ function git_commit() {
 }
 function native_compose_file_set() {
   if [ "$#" -gt 0 ]; then
-    setArch "$project_root/docker-compose.template" "$project_root/docker-compose.${DKR_ARCH}"
+    setArch "$project_root/docker-compose.template" "$project_root/docker-compose.${BALENA_ARCH}"
     cp -vf "$project_root/docker-compose.$1" "$project_root/docker-compose.yml"
   else
-    native_compose_file_set "${DKR_ARCH}"
+    native_compose_file_set "${BALENA_ARCH}"
   fi
 }
 function balena_push() {
@@ -246,11 +246,11 @@ while true; do
     4|--docker)
       slogger -st docker "Allow cross-build"
       cross_build_start
-      file=docker-compose.${DKR_ARCH}
+      file=docker-compose.${BALENA_ARCH}
       if [ -f "$file" ]; then
         bash -c "docker-compose -f $file --host ${DOCKER_HOST:-''} build"  >> "$LOG"
       else
-        bash -c "docker build -f Dockerfile.${DKR_ARCH} . && docker ps"  >> "$LOG"
+        bash -c "docker build -f Dockerfile.${BALENA_ARCH} . && docker ps"  >> "$LOG"
       fi
       ;;
     2|--balena)
