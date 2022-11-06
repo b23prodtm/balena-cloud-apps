@@ -29,13 +29,13 @@ function test_deploy_3() {
   grep -q "raspberrypi3" < "$testd/submodule/Dockerfile.armhf"
 }
 function test_docker_3() {
-  args=("${testd}/submodule" -m . "betothreeprod/raspberrypi3" "$DKR_ARCH")
+  args=("${testd}/submodule" -m . "betothreeprod/raspberrypi3" "$BALENA_ARCH")
   # shellcheck disable=SC1090
   . "$vendord/docker_build.sh" "${args[@]}" >> "$LOG"
   docker image ls -q "${args[3]}*"
 }
 function test_docker() {
-  args=("${testd}/deployment/images/dind-php7" -m . "betothreeprod/dind-php7" "$DKR_ARCH")
+  args=("${testd}/deployment/images/dind-php7" -m . "betothreeprod/dind-php7" "$BALENA_ARCH")
   # shellcheck disable=SC1090
   . "$vendord/docker_build.sh" "${args[@]}" >> "$LOG"
   docker image ls -q "${args[3]}*"

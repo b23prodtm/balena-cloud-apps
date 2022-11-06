@@ -30,7 +30,7 @@ BALENA_PROJECTS_FLAGS=(BALENA_MACHINE_NAME MY_VARIABLE)
 Define architectures: 
 An ARM computer units like Raspberry PI use `armhf.env` (or `aarch64.env` if it's deployed on a 64 bits platform), desktop units are often `x86_64.env`:
 ```x86_64.env
-DKR_ARCH=x86_64
+BALENA_ARCH=x86_64
 BALENA_MACHINE_NAME=intel-nuc
 IMG_TAG=latest
 PRIMARY_HUB=docker-hub-balenalib-repo\\/container-servìce-image
