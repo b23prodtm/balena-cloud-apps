@@ -3,7 +3,7 @@ set +u
 [ "$#" -eq 0 ] && echo "usage $0 <project_root|\${BASH_SOURCE[0]}> <args>" && exit 0
 [ -f "$1" ] && set -- "$(cd "$(dirname "$1")" && pwd)" "${@:2}"
 project_root="$(cd "$1" && pwd)"; shift
-banner=("" "[$0] BASH ${BASH_SOURCE[0]}" "$project_root" ""); printf "%s\n" "${banner[@]}"
+banner=( "" "[$0] BASH ${BASH_SOURCE[0]}" "$project_root" "" ); printf "%s\n" "${banner[@]}"
 
 # shellcheck source=init_functions.sh
 . "$(command -v init_functions)" "${BASH_SOURCE[0]}"
@@ -31,13 +31,13 @@ usage=("" \
 "                         6,--build-deps          Deployment images dependencies build." \
 "                         0,--exit                Quit script (non interactive)." \
 "" \
-"Deployment images        Set BALENA_PROJECTS=(./dir_one ./dir_two ./dir_three)" \
+"Deployment images        Set BALENA_PROJECTS=( ./dir_one ./dir_two ./dir_three )" \
 "                         in common.env file." \
-"Variable filters         Set BALENA_PROJECTS_FLAGS=(VAR_ONE VAR_TWO)" \
+"Variable filters         Set BALENA_PROJECTS_FLAGS=( VAR_ONE VAR_TWO )" \
 "                         in common.env" \
 "")
 arch=${1:-''}
-saved=("${@:2}")
+saved=( "${@:2}" )
 while true; do
   case $arch in
     1|arm32*|armv7l|armhf)
@@ -66,10 +66,10 @@ ln -vsf "$project_root/${BALENA_ARCH}.env" "$project_root/.env" >> "$LOG"
 # shellcheck disable=SC1090
 . "$project_root/.env" && . "$project_root/common.env"
 ### ADD ANY ENVIRONMENT VARIABLE TO BALENA_PROJECTS_FLAGS
-flags=()
+flags=(  )
 if [ -n "$BALENA_PROJECTS_FLAGS" ]; then
   log_daemon_msg "Found ${#BALENA_PROJECTS_FLAGS[@]} flags set BALENA_PROJECTS_FLAGS" >> "$LOG"
-  flags=("${BALENA_PROJECTS_FLAGS[@]}")
+  flags=( "${BALENA_PROJECTS_FLAGS[@]}" )
 fi
 function setArch() {
   while [ "$#" -gt 1 ]; do
@@ -81,7 +81,7 @@ function setArch() {
     printf "%s\n" "${sed[@]}" >> "$1.sed"
     for flag in "${flags[@]}"; do
       flag_val=$(eval "echo \${$flag}")
-      sed=("s#(${flag}[=:-]+)[^\$ }]+#\\1${flag_val}#g" \
+      sed=( "s#(${flag}[=:-]+)[^\$ }]+#\\1${flag_val}#g" \
       "s#%%${flag}%%#${flag_val}#g" )
       printf "%s\n" "${sed[@]}" >> "$1.sed"
     done
@@ -89,10 +89,10 @@ function setArch() {
   shift 2; done
 }
 ### ADD ANY SUBMODULE DOCKER IMAGE / SERVICE TO BALENA_PROJECTS
-projects=(".")
+projects=( "." )
 if [ "${#BALENA_PROJECTS[@]}" -gt 0 ]; then
   log_daemon_msg "Found ${#BALENA_PROJECTS[@]} projects set BALENA_PROJECTS"  >> "$LOG"
-  projects=("${BALENA_PROJECTS[@]}")
+  projects=( "${BALENA_PROJECTS[@]}" )
 fi
 function deploy_deps() {
   mapfile -t dock < <(find "${project_root}/deployment/images" -name "Dockerfile.${BALENA_ARCH}")
@@ -123,8 +123,8 @@ function comment() {
       echo "/${ARM_BEGIN}/,/${ARM_END}/s/^[# ]*(.*)/# \\1/g" >> "$file.sed"
       ;;
     -c*|--cross)
-      sed=("s/[# ]*(${MARK_BEGIN})/# \\1/g" \
-      "s/[# ]*(${MARK_END})/# \\1/g")
+      sed=( "s/[# ]*(${MARK_BEGIN})/# \\1/g" \
+      "s/[# ]*(${MARK_END})/# \\1/g" )
       printf "%s\n" "${sed[@]}" >> "$file.sed"
       ;;
   esac; shift; done;
@@ -143,8 +143,8 @@ function uncomment() {
       echo "/${ARM_BEGIN}/,/${ARM_END}/s/^(# )+(.*)/\\2/g" >> "$file.sed"
       ;;
     -c*|--cross)
-      sed=("s/(# )+(${MARK_BEGIN})/\\2/g" \
-      "s/(# )+(${MARK_END})/\\2/g")
+      sed=( "s/(# )+(${MARK_BEGIN})/\\2/g" \
+      "s/(# )+(${MARK_END})/\\2/g" )
       printf "%s\n" "${sed[@]}" >> "$file.sed"
       ;;
   esac; shift; done;
@@ -209,9 +209,9 @@ function native_compose_file_set() {
   fi
 }
 function balena_push() {
-  apps=("$#")
+  apps=( "$#" )
   i=0
-  [ "$#" -gt 0 ] && for a in "$@"; do apps+=("$a"); done
+  [ "$#" -gt 0 ] && for a in "$@"; do apps+=( "$a" ); done
   for a in "${!apps[@]}"; do
     [ "$a" = 0 ] && continue
     printf "[%s]: %s " "$a" "${apps[$a]}"

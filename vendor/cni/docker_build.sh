@@ -3,7 +3,7 @@ set -u
 [ "$#" -eq 0 ] && echo "usage $0 <work_dir> <args>" && exit 0
 [ -f "$1" ] && set -- "$(cd "$(dirname "$1")" && pwd)" "${@:2}"
 workd="$(cd "$1" && pwd)"; shift
-banner=("" "[$0] BASH ${BASH_SOURCE[0]}" "$workd" ""); printf "%s\n" "${banner[@]}"
+banner=( "" "[$0] BASH ${BASH_SOURCE[0]}" "$workd" "" ); printf "%s\n" "${banner[@]}"
 [ "${DEBUG:-0}" != 0 ] && printf "passed arg %s\n" "$*"
 usage=("" \
 "Usage: $0 [options] <work_sub_dir> <container_name> [BALENA_ARCH]" \

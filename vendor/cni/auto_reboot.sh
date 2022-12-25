@@ -30,7 +30,7 @@ DAEMON_SVC="/usr/lib/systemd/system/$SVC_NAME.service.d/"
 [ -f $DAEMON_CF ] || touch "$DAEMON_CF"
 [ -d $DAEMON_SVC ] || mkdir -p "$DAEMON_SVC"
 
-banner=("" "[services.d] $DAEMON_SVC" ""); log_daemon_msg "%s\n" "${banner[@]}"
+banner=( "" "[services.d] $DAEMON_SVC" "" ); log_daemon_msg "%s\n" "${banner[@]}"
 
 DAEMON_CF="$DAEMON_CF $(find "$DAEMON_SVC" -name "*.conf")"
 for cnf in $DAEMON_CF; do

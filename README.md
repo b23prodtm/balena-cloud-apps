@@ -22,10 +22,10 @@ Initialize .env and package.json:
 
 ### Configure template environment
 
-Complete common definitions:
+Complete common definitions (leading and trailing ( spaces ) when defining arrays !!):
 ```common.env
-BALENA_PROJECTS=(MY/PATH MY/RELATIVE/PATH)
-BALENA_PROJECTS_FLAGS=(BALENA_MACHINE_NAME MY_VARIABLE)
+BALENA_PROJECTS=( MY/PATH MY/RELATIVE/PATH )
+BALENA_PROJECTS_FLAGS=( BALENA_MACHINE_NAME MY_VARIABLE )
 ```
 Define architectures: 
 An ARM computer units like Raspberry PI use `armhf.env` (or `aarch64.env` if it's deployed on a 64 bits platform), desktop units are often `x86_64.env`:

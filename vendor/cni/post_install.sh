@@ -7,6 +7,6 @@ read -r -a BALENA_PROJECTS < <(find . -name "Dockerfile*" | awk -F"/Dockerfile" 
 printf "Found %s BALENA_PROJECTS(" "${#BALENA_PROJECTS}"
 printf "%s " "${BALENA_PROJECTS[@]}"
 printf " )\n"
-sed -i.old -E -e "s#(BALENA_PROJECTS)=(.*))#\\1=\(${BALENA_PROJECTS[*]}\) \#\\2#" common.env
+sed -i.old -E -e "s#(BALENA_PROJECTS)=(.*))#\\1=\( ${BALENA_PROJECTS[*]} \) \#\\2#" common.env
 cat common.env
 printf "Ready to <( balena_deploy . \n"

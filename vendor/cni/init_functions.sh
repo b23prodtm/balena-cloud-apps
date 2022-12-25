@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 [ "$#" -eq 0 ] && echo "usage $0 \${BASH_SOURCE[0]} <args>" && exit 0
-banner=("" "[$0] BASH ${BASH_SOURCE[0]}" ""); printf "%s\n" "${banner[@]}"
+banner=( "" "[$0] BASH ${BASH_SOURCE[0]}" "" ); printf "%s\n" "${banner[@]}"
 function log_daemon_msg() {
   printf "* %s\n" "$@"
 }
