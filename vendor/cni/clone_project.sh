@@ -31,3 +31,4 @@ else
   nvm install 19
 fi
 
+printf "You're ready to use balena-cloud-apps on this project, run ./deploy.sh !\n"

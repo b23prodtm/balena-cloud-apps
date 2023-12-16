@@ -10,6 +10,7 @@
     "test": "cd test && ./build-test.sh && exit 0"
   },
   "bin": {
+    "clone_project": "vendor/cni/clone_project.sh",
     "auto_reboot": "vendor/cni/auto_reboot.sh",
     "balena_deploy": "vendor/cni/balena_deploy.sh",
     "docker_build": "vendor/cni/docker_build.sh",
