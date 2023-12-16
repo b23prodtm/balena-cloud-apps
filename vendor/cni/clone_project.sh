@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-[ "$#" = 0 ] && printf "Usage: $0 <up-directory-path>\n" && exit 0
+[ "$#" = 0 ] && printf "Usage: %s <up-directory-path>\n" "$0" && exit 0
 PACKAGE_DIR="$1"
 
 [ ! -d "$PACKAGE_DIR/deployment" ] && "Directory not found $PACKAGE_DIR/deployment!\n" && exit 1
@@ -23,10 +23,10 @@ printf "Processing files done.\n"
 
 printf "Installing dependency balena-cloud-apps must be installed in version 19 !!\n"
 sleep 1
-if [ $(command -v npm) > /dev/null ]; then
+if [[ "$(command -v npm)" > /dev/null ]]; then
   npm link balena-cloud-apps && npm update
 else
-  printf "NPMJS node not found,\n" 
+  printf "NPMJS node not found,\n"
   sleep 1
   nvm install 19
 fi
