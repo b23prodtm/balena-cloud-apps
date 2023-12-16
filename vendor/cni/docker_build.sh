@@ -6,7 +6,7 @@ workd="$(cd "$1" && pwd)"; shift
 banner=( "" "[$0] BASH ${BASH_SOURCE[0]}" "$workd" "" ); printf "%s\n" "${banner[@]}"
 [ "${DEBUG:-0}" != 0 ] && printf "passed arg %s\n" "$*"
 usage=("" \
-"Usage: $0 [options] <work_sub_dir> <container_name> [BALENA_ARCH]" \
+"Usage: $0 [options] <work_dir> <work_sub_dir> <container_name>:[IMG_TAG] [BALENA_ARCH]" \
 "                    <-f, --force> <-e> <-m, --make-space>" \
 "" \
 "                    Base balenalib/raspberrypi3 images may be" \
@@ -17,17 +17,20 @@ usage=("" \
 "          work_sub_dir:    Path relative to $0" \
 "          container_name:  Set to username/container to push to" \
 "                           Docker.io, e.g. myself/cakephp2-image x86_64" \
+"          IMG_TAG:         Set as environment variable IMG_TAG" \
+"                           File <BALENA_ARCH>.env" \
 "          BALENA_ARCH:        1|arm32*|armv7l|armhf   ARMv7 OS" \
 "                           2|arm64*|aarch64        ARMv8 OS" \
 "                           3|amd64|x86_64          All X86 64 bits" \
 "                                                   OS (Mac or PC)" \
+"More about docker tag:" \
+"       docker tag <repository/image:tag> <new_repository/new_image:tag>" \
+"" \
+"          Available options:" \
 "          -f,--force:      Set docker daemon restart flag on" \
 "          -e:              Reset docker machine environment variables" \
 "          -m,--make-space: Remove exited containers to free some disk space" \
-"          TAG:             Set as environment variable IMG_TAG" \
-"                           File <BALENA_ARCH>.env" \
-"More about docker tag:" \
-"       docker tag <repository/image:tag> <new_repository/new_image:tag>" \
+"          -h,--help:       This help" \
 "")
 [ "$#" -lt 3 ] && printf "%s\n" "${usage[@]}" && exit 0
 while [[ "$#" -gt 0 ]]; do case $1 in
@@ -45,7 +48,9 @@ while [[ "$#" -gt 0 ]]; do case $1 in
   *)
     DIR="$1"
     NAME=$(echo "$2" | cut -d: -f1)
+    TAG=$(echo "$2" | cut -d: -f2)
     BALENA_ARCH="$3"
+    IMG_TAG=${IMG_TAG:-"$TAG"}
     shift 2
     ;;
 esac; shift; done
