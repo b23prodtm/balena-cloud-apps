@@ -34,6 +34,7 @@ jobs:
               export SUDO="sudo";
             fi
             set -e
+            $SUDO apt install git-all
             $SUDO cp vendor/cni/init_functions.sh /usr/local/bin/init_functions
             $SUDO chmod +x /usr/local/bin/init_functions
             npm test
