@@ -77,7 +77,7 @@ results+=( "$?" )
 check_log "$LOG"
 
 for r in "${!results[@]}"; do
-    let n=$r+1
+    (( n=$r+1 ))
     if [ "${results[$r]}" -gt 0 ]; then
       cat "$LOG"
       log_failure_msg "test n°$n FAIL"
