@@ -47,8 +47,8 @@ function test_git_fix() {
   . "$vendord/git_fix_issue.sh" "${args[2]}" >> "$LOG"
 }
 function test_git_fix_close() {
-  args=( "1" "master" )
   test_git_fix
+  args=( "1" "master" )
   # shellcheck disable=SC1090
   . "$vendord/git_fix_issue_close.sh" "${args[@]}" >> "$LOG"
 }
