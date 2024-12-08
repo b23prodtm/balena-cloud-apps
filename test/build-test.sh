@@ -42,7 +42,7 @@ function test_docker() {
 }
 function test_git_fix() {
   args=( "https://github.com/b23prodtm/balena-cloud-apps.git" "balena-cloud-apps" "1" )
-  git clone "${args[0]}" && cd "${args[1]}"
+  git clone "${args[0]}" && cd "${args[1]}" || return
   # shellcheck disable=SC1090
   . "$vendord/git_fix_issue.sh" "${args[2]}" >> "$LOG"
 }
