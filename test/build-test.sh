@@ -72,8 +72,7 @@ results+=( "$?" )
 test_git_fix_close
 results+=( "$?" )
 test_update
-# force n°8 test success
-results+=( "0" )
+results+=( "$?" )
 [ "$chkSet" = 'x' ] && unset DEBIAN_FRONTEND || DEBIAN_FRONTEND=${chkSet:2}
 check_log "$LOG"
 
