@@ -18,7 +18,7 @@
     "post_install": "vendor/cni/post_install.sh",
     "git_fix_issue": "vendor/cni/git_fix_issue.sh",
     "git_fix_issue_close": "vendor/cni/git_fix_issue_close.sh",
-    "update_templates": "vendor/cni/update_templates.sh",
+    "update_templates": "vendor/cni/update_templates.sh"
   },
   "keywords": [
     "balena",
