@@ -64,15 +64,13 @@ jobs:
             npm publish
 
 workflows:
-  cleanup:
-    jobs:
-      - shellcheck/check:
-          ignore: 'SC1091'
   test-deploy:
     jobs:
       - shellcheck/check:
           ignore: 'SC1091'
       - test:
+          requires:
+            - shellcheck/check
           filters:
             tags:
               only: /^v.*/

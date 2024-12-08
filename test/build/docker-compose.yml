@@ -1,0 +1,7 @@
+version: '2'
+services:
+  testsvc:
+    docker:
+      context: submodule
+      dockerfile: Dockerfile.aarch64
+    image: betothreeprod/generic-aarch64

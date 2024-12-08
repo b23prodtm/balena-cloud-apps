@@ -43,13 +43,12 @@ Run unit tests on local host or CI
 
 ### Build dependencies
 Docker Image dependencies are required to validate test units. Theses dependencies include build images needed by Docker based environments:
-  - Docker and cloud platform (BalenaOS, etc.)
+  - Docker and Balena Cloud platform (DockerHub, etc.)
   - CircleCI, TravisCI, etc.
-  - Kubernetes and similar (Openshift, Micro-k8s, etc.)
 
-First login to Docker, if you already have an account or [create one](https://hub.docker.com).
+First login to Docker or Balena, if you already have an account or [create one](https://hub.docker.com).
 
-    docker login
+    docker login or balena login
     
 The folder `deployments` contains Dockerfile templates that maybe pulled from Docker.
 
@@ -60,7 +59,7 @@ Finally select the corresponding architecture `ARM32, ARM64 bits or X86-64 (choo
 It takes a few minutes for the docker machine to pull, update local images and to push them to the repository. They take the name `$DOCKER_USER/<image>` and get a public URL at `https://hub.docker.com/r/$DOCKER_USER/<image>`
 
 ## Deploy
-Deploy to Docker or BalenOS, easy, choose targets:
+Deploy to Docker or BalenaOS, easy, choose targets:
 
     balena_deploy .
 
@@ -77,3 +76,5 @@ balena_deploy . armhf --balena
 # Updating and managing npm version
 Follow general guidelines in the documention about [versioning this project on npm](https://docs.npmjs.com/packages-and-modules/updating-and-managing-your-published-packages)
 
+# CLI functions
+All endpoints in command line shell scripts are registered in package.json. When balena-cloud-apps installs itself, the functions become available to environment PATH.

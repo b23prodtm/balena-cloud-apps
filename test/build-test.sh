@@ -40,6 +40,23 @@ function test_docker() {
   . "$vendord/docker_build.sh" "${args[@]}" >> "$LOG"
   docker image ls -q "${args[3]}*"
 }
+function test_git_fix() {
+  args=( "https://github.com/b23prodtm/balena-cloud-apps.git" "balena-cloud-apps" "1" )
+  git clone "${args[0]}" && cd "${args[1]}" || return
+  # shellcheck disable=SC1090
+  . "$vendord/git_fix_issue.sh" "${args[2]}" >> "$LOG"
+}
+function test_git_fix_close() {
+  test_git_fix
+  args=( "1" "master" )
+  # shellcheck disable=SC1090
+  . "$vendord/git_fix_issue_close.sh" "${args[@]}" >> "$LOG"
+}
+function test_update() {
+  args=( "-d" "$testd" )
+  # shellcheck disable=SC1090
+  . "$vendord/update_templates.sh" "${args[@]}" >> "$LOG"
+}
 test_deploy
 results=( "$?" )
 test_docker
@@ -50,15 +67,22 @@ test_deploy_3
 results+=( "$?" )
 test_docker_3
 results+=( "$?" )
+test_git_fix
+results+=( "$?" )
+test_git_fix_close
+results+=( "$?" )
+test_update
+results+=( "$?" )
 [ "$chkSet" = 'x' ] && unset DEBIAN_FRONTEND || DEBIAN_FRONTEND=${chkSet:2}
 check_log "$LOG"
 
 for r in "${!results[@]}"; do
+    (( n=r+1 ))
     if [ "${results[$r]}" -gt 0 ]; then
       cat "$LOG"
-      log_failure_msg "test n°$r FAIL"
+      log_failure_msg "test n°$n FAIL"
       exit "${results[$r]}"
     else
-      log_success_msg "test n°$r PASS"
+      log_success_msg "test n°$n PASS"
     fi
 done
