@@ -16,9 +16,9 @@
     "docker_build": "vendor/cni/docker_build.sh",
     "init_functions": "vendor/cni/init_functions.sh",
     "post_install": "vendor/cni/post_install.sh",
-    "git_fix_issue": "vendor/cni/git_fix_issue.sh"
-    "git_fix_issue_close": "vendor/cni/git_fix_issue_close.sh"
-    "update_templates": "vendor/cni/update_templates.sh"
+    "git_fix_issue": "vendor/cni/git_fix_issue.sh",
+    "git_fix_issue_close": "vendor/cni/git_fix_issue_close.sh",
+    "update_templates": "vendor/cni/update_templates.sh",
   },
   "keywords": [
     "balena",
