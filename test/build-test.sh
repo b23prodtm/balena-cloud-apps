@@ -80,7 +80,7 @@ for r in "${!results[@]}"; do
     n=$(($r+1))
     if [ "${results[$r]}" -gt 0 ]; then
       cat "$LOG"
-      log_failure_msg "test n°$n, FAIL")
+      log_failure_msg "test n°$n FAIL"
       exit "${results[$r]}"
     else
       log_success_msg "test n°$n PASS"
