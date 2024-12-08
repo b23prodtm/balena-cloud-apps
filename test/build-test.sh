@@ -45,6 +45,7 @@ function test_git_fix() {
   git clone "${args[0]}" && cd "${args[1]}"
   # shellcheck disable=SC1090
   . "$vendord/git_fix_issue.sh" "${args[2]}" >> "$LOG"
+}
 function test_git_fix_close() {
   args=( "1" )
   test_git_fix
