@@ -53,7 +53,7 @@ function test_git_fix_close() {
   . "$vendord/git_fix_issue_close.sh" "${args[@]}" >> "$LOG"
 }
 function test_update() {
-  args=( "" )
+  args=( "-d" "$testd" )
   # shellcheck disable=SC1090
   . "$vendord/update_templates.sh" "${args[@]}" >> "$LOG"
 }
@@ -70,8 +70,7 @@ results+=( "$?" )
 test_git_fix
 results+=( "$?" )
 test_git_fix_close
-# force success
-results+=( "0" )
+results+=( "$?" )
 test_update
 results+=( "$?" )
 [ "$chkSet" = 'x' ] && unset DEBIAN_FRONTEND || DEBIAN_FRONTEND=${chkSet:2}
@@ -80,7 +79,7 @@ check_log "$LOG"
 for r in "${!results[@]}"; do
     if [ "${results[$r]}" -gt 0 ]; then
       cat "$LOG"
-      log_failure_msg "test n°$r FAIL"
+      log_failure_msg "test n°$(($r+1)), FAIL")
       exit "${results[$r]}"
     else
       log_success_msg "test n°$r PASS"
