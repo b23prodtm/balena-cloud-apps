@@ -4,17 +4,17 @@ if [ -z "$1" ]; then
 else
   printf "Close fixture %s ...\n" "$1"
   sleep 1
-  if [ "$(git checkout "$2" > /dev/null)" ]; then
+  if [ "$(git checkout "$2" >> "$LOG")" ]; then
     echo "Switched to $2"
   fi
   printf "Delete branch %s\n" "fix/issue-$1"
   sleep 1
-  if [ "$(git branch -D fix/issue-"$1" > /dev/null)" ]; then
+  if [ "$(git branch -D fix/issue-"$1" >> "$LOG")" ]; then
     echo "Branch was deleted !"
   fi
   printf "Pulling recent changes...\n"
   sleep 1
-  if [ "$(git pull > /dev/null)" ]; then
+  if [ "$(git pull >> "$LOG")" ]; then
     echo "Done."
   fi
 fi
