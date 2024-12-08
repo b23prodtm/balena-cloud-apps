@@ -40,6 +40,22 @@ function test_docker() {
   . "$vendord/docker_build.sh" "${args[@]}" >> "$LOG"
   docker image ls -q "${args[3]}*"
 }
+function test_git_fix() {
+  args=( "https://github.com/b23prodtm/balena-cloud-apps.git" "balena-cloud-apps" "1" )
+  git clone "${args[0]}" && cd "${args[1]}"
+  # shellcheck disable=SC1090
+  . "$vendord/git_fix_issue.sh" "${args[2]}" >> "$LOG"
+function test_git_fix_close() {
+  args=( "1" )
+  test_git_fix
+  # shellcheck disable=SC1090
+  . "$vendord/git_fix_issue_close.sh" "${args[@]}" >> "$LOG"
+}
+function test_update() {
+  args=( "" )
+  # shellcheck disable=SC1090
+  . "$vendord/update_templates.sh" "${args[@]}" >> "$LOG"
+}
 test_deploy
 results=( "$?" )
 test_docker
@@ -49,6 +65,12 @@ results+=( "$?" )
 test_deploy_3
 results+=( "$?" )
 test_docker_3
+results+=( "$?" )
+test_git_fix
+results+=( "$?" )
+test_git_fix_close
+results+=( "$?" )
+test_update
 results+=( "$?" )
 [ "$chkSet" = 'x' ] && unset DEBIAN_FRONTEND || DEBIAN_FRONTEND=${chkSet:2}
 check_log "$LOG"
