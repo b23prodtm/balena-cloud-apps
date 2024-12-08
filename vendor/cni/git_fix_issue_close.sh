@@ -4,8 +4,8 @@ if [ -z "$1" ]; then
 else
   printf "Close fixture %s ...\n" "$1"
   sleep 1
-  if [ "$(git checkout main > /dev/null)" ]; then
-    echo "Switched to main"
+  if [ "$(git checkout $2 > /dev/null)" ]; then
+    echo "Switched to $2"
   fi
   printf "Delete branch %s\n" "fix/issue-$1"
   sleep 1
