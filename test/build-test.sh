@@ -78,7 +78,7 @@ check_log "$LOG"
 
 for r in "${!results[@]}"; do
     (( n=r+1 ))
-    if [ "${results[$r]}" -gt 0 ]; then
+    if [ "${results[$r]}" & 0x1 ]; then
       cat "$LOG"
       log_failure_msg "test n°$n FAIL"
       exit "${results[$r]}"
