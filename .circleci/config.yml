@@ -71,14 +71,11 @@ workflows:
       - test:
           requires:
             - shellcheck/check
-          filters:
-            tags:
-              only: /^v.*/
       - deploy:
           requires:
             - test
           filters:
             tags:
-              only: /^v.*/
+              only: /v.*/
             branches:
               ignore: /.*/
