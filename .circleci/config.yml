@@ -75,5 +75,5 @@ workflows:
           requires:
             - test
           filters:
-            tags:
+            branches:
               only: /v.*/
