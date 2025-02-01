@@ -26,7 +26,7 @@ jobs:
           - v1-dependencies-{{ checksum "package.json" }}
           # fallback to using the latest cache if no exact match is found
           - v1-dependencies-
-      - run: npm install
+      - run: yarn
       - run:
           name: Run tests
           command: |
@@ -36,7 +36,7 @@ jobs:
             set -e
             $SUDO cp vendor/cni/init_functions.sh /usr/local/bin/init_functions
             $SUDO chmod +x /usr/local/bin/init_functions
-            npm test
+            yarn test
 
       - save_cache:
           paths:

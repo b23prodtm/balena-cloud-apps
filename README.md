@@ -7,7 +7,8 @@ Within an open source application, like  [balena-sound](https://github.com/balen
 ```Shell
 #!/usr/bin/env bash
 cd application
-npm install balena-cloud-apps
+yarn add balena-cloud-apps
+npm link balena-cloud-apps
 ```
 
 ### Template fields 
@@ -39,7 +40,7 @@ PRIMARY_HUB=docker-hub-balenalib-repo\\/container-servìce-image
 # Test
 Run unit tests on local host or CI
 
-    npm test
+    yarn test
 
 ### Build dependencies
 Docker Image dependencies are required to validate test units. Theses dependencies include build images needed by Docker based environments:
@@ -65,13 +66,13 @@ Deploy to Docker or BalenaOS, easy, choose targets:
 
 You can build locally:
 
-    docker_build .
+    docker_build . . <DOCKER_USER>/<IMAGE>:<TAG> <BALENA_ARCH>
 
 In BASH scripts, use arguments:
-```Console
-balena_deploy . x86_64 --nobuild --exit
-balena_deploy . armhf --balena
-```
+
+    balena_deploy . x86_64 --nobuild --exit
+    balena_deploy . armhf --balena
+
 
 # Updating and managing npm version
 Follow general guidelines in the documention about [versioning this project on npm](https://docs.npmjs.com/packages-and-modules/updating-and-managing-your-published-packages)
