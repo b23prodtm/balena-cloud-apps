@@ -259,7 +259,7 @@ while true; do
       native_compose_file_set
       if command -v balena > /dev/null; then
         # shellcheck disable=SC2046
-        balena_push $(balena fleets | awk '{if (NR>1) print $2}') || true
+        balena_push $(balena fleet list | awk '{if (NR>1) print $2}') || true
       else
         log_warning_msg "Balena Cloud not installed. Using git push."
         git push -uf balena || true
