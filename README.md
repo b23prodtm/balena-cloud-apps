@@ -77,5 +77,13 @@ In BASH scripts, use arguments:
 # Updating and managing npm version
 Follow general guidelines in the documention about [versioning this project on npm](https://docs.npmjs.com/packages-and-modules/updating-and-managing-your-published-packages)
 
+Basically, commit all your changes and bump to the next version, then push tags:
+
+    # version string without the leading "v."
+    npm version "0.0.1"
+    git push --tags
+
+The continuous integration system will detect the new version tag and deploy to NPMJS if all build steps succeed.
+
 # CLI functions
 All endpoints in command line shell scripts are registered in package.json. When balena-cloud-apps installs itself, the functions become available to environment PATH.
