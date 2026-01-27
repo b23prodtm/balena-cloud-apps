@@ -3,7 +3,7 @@
 *.x86
 *.sed
 .env
-test/build/init_functions
+test/build/**
 node_modules
 build.log
 balena-cloud-apps.log
