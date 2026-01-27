@@ -6,7 +6,7 @@ if (!shell.which('git')) {
 }
 
 shell.cd('test');
-shell.chmod('755', 'test/build-test.sh');
+shell.chmod('755', 'build-test.sh');
 if (shell.exec('./build-test.sh').code !== 0) {
   shell.echo('Error: test build failed');
   shell.exit(1);
