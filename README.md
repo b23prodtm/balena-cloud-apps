@@ -8,7 +8,6 @@ Within an open source application, like  [balena-sound](https://github.com/balen
 #!/usr/bin/env bash
 cd application
 yarn add balena-cloud-apps
-npm link balena-cloud-apps
 ```
 
 ### Template fields 
