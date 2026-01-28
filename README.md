@@ -7,6 +7,7 @@ Within an open source application, like  [balena-sound](https://github.com/balen
 ```Shell
 #!/usr/bin/env bash
 cd application
+printf "%s\n" "nodeLinker: node-modules" | tee -a .yarnrc.yml
 yarn add balena-cloud-apps
 ```
 
