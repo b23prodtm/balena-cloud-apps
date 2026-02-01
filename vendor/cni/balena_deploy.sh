@@ -169,6 +169,7 @@ function cross_build_start() {
     ln -vsf "$project_root/${BALENA_ARCH}.env" "$project_root/$d/.env" >> "$LOG"
     [ "$(cd "$project_root/$d" && pwd)" != "$(pwd)" ] && ln -vsf "$project_root/common.env" "$project_root/$d/common.env" >> "$LOG"
     setArch "$project_root/$d/Dockerfile.template" "$project_root/$d/Dockerfile.${BALENA_ARCH}"
+    setArch "$project_root/$d/build.template" "$project_root/$d/build.${BALENA_ARCH}.sh"
     if [ "$crossbuild" = 0 ]; then
       if [ "$arch" != "x86_64" ]; then
         comment "$project_root/$d/Dockerfile.${BALENA_ARCH}" -c
@@ -202,7 +203,7 @@ function git_commit() {
 }
 function native_compose_file_set() {
   if [ "$#" -gt 0 ]; then
-    setArch "$project_root/docker-compose.template" "$project_root/docker-compose.${BALENA_ARCH}"
+    setArch "$project_root/docker-compose.template" "$project_root/docker-compose.$1"
     cp -vf "$project_root/docker-compose.$1" "$project_root/docker-compose.yml"
   else
     native_compose_file_set "${BALENA_ARCH}"
@@ -241,7 +242,6 @@ while true; do
       else
         log_failure_msg "Please install Balena Cloud to run this script."
       fi
-      native_compose_file_set -d
       ;;
     4|--docker)
       slogger -st docker "Allow cross-build"
@@ -264,11 +264,11 @@ while true; do
         log_warning_msg "Balena Cloud not installed. Using git push."
         git push -uf balena || true
       fi
-      native_compose_file_set -d
       ;;
     3|--nobuild)
       slogger -st docker "Allow cross-build" >> "$LOG"
       cross_build_start
+      native_compose_file_set
       ;;
     5|--push)
       git push --recurse-submodules=on-demand
@@ -276,6 +276,7 @@ while true; do
     6|--build-deps)
       slogger -st docker "Allow cross-build" >> "$LOG"
       cross_build_start
+      native_compose_file_set
       deploy_deps
       ;;
     0|--exit)
