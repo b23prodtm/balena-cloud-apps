@@ -87,6 +87,6 @@ new_log() {
         __log error "Failed to create log file: $LOG"
         return 1
     }
-
-    __log info "Logging to $LOG"
+    # return file path
+    printf "%s\n" "$LOG"
 }
