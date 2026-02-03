@@ -14,7 +14,7 @@ LOG=""
 PROJECT_ROOT=""
 ARCH=""
 BALENA_ARCH=""
-DEBIAN_FRONTEND_DEFAULT=${DEBIAN_FRONTEND:-""}
+DEBIAN_FRONTEND=${DEBIAN_FRONTEND:-""}
 
 #######################################
 # Logging helpers (assumed from init_functions)
@@ -218,7 +218,7 @@ select_arch() {
   run_cmd ln -vsf "$PROJECT_ROOT/${BALENA_ARCH}.env" "$PROJECT_ROOT/.env" >>"$LOG" 2>&1
   # shellcheck disable=SC1090
   . "$PROJECT_ROOT/.env"
-  # shellcheck disable=SC1091
+  # shellcheck disable=SC1090
   . "$PROJECT_ROOT/common.env"
 }
 
@@ -234,6 +234,7 @@ get_flags_array() {
     # shellcheck disable=SC2154
     _out=("${BALENA_PROJECTS_FLAGS[@]}")
   fi
+  echo "$_out[@]"
 }
 
 #######################################
@@ -248,6 +249,7 @@ get_projects_array() {
     # shellcheck disable=SC2154
     _out=("${BALENA_PROJECTS[@]}")
   fi
+  echo "$_out[@]"
 }
 
 #######################################
@@ -682,7 +684,7 @@ main() {
   rest=$(printf '%s\n' "$project_root" | tail -n +2 || true)
   project_root=$(printf '%s\n' "$project_root" | head -n 1)
 
-  init_environment "$project_root" $rest
+  init_environment "$project_root" "$rest"
 
   # First of remaining args is arch (if any)
   # shellcheck disable=SC2206
