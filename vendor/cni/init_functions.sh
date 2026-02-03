@@ -8,6 +8,11 @@
 
 LOG_LEVEL="${LOG_LEVEL:-info}"
 
+# If DEBUG=1, force log level to debug
+if [ "${DEBUG:-0}" = "1" ]; then
+    LOG_LEVEL="debug"
+fi
+
 # Map log levels to numeric values
 __log_level_num() {
     case "$1" in
@@ -64,12 +69,8 @@ log_progress_msg() { __log info  "$*"; }
 log_success_msg()  { __log info  "$*"; }
 log_failure_msg()  { __log error "$*"; }
 
-# Debug mode
-if [ "${DEBUG:-0}" = "1" ]; then
-    log_debug() { __log debug "$*"; }
-else
-    log_debug() { :; } # no-op
-fi
+# Debug logging
+log_debug() { __log debug "$*"; }
 
 # ---------------------------------------------------------------------------
 # LOG FILE SUPPORT (optional)
