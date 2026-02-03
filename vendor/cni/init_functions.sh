@@ -4,7 +4,12 @@
 # Journald logging with LOG_LEVEL filtering
 # ---------------------------------------------------------------------------
 
-LOG_LEVEL="${LOG_LEVEL:-info}"
+# If DEBUG=1, force debug logging
+if [[ "${DEBUG:-0}" == "1" ]]; then
+    LOG_LEVEL="debug"
+else
+    LOG_LEVEL="${LOG_LEVEL:-info}"
+fi
 
 __level_num() {
     case "$1" in
@@ -17,6 +22,7 @@ __level_num() {
 }
 
 CURRENT_LEVEL_NUM="$(__level_num "$LOG_LEVEL")"
+
 
 # Journald priority mapping
 __journal_prio() {
@@ -119,21 +125,19 @@ new_log() {
     touch "$LOG"
     chmod 1777 "$LOG"
 
-    if [[ -n "${DEBUG:-}" ]]; then
-        local count
-        count=$(log_size "$LOG" | cut -d= -f2)
-        if (( count > LOG_MAX_ROLLOUT )); then
-            mv "$LOG" "$LOG.$(date +%Y-%m-%d_%H:%M)"
-            new_log "$@"
-            return
-        fi
+    local count
+    count=$(log_size "$LOG" | cut -d= -f2)
+    if (( count > LOG_MAX_ROLLOUT )); then
+        mv "$LOG" "$LOG.$(date +%Y-%m-%d_%H:%M)"
+        new_log "$@"
+        return
     fi
 
     printf "%s\n" "$LOG"
 }
 
 check_log() {
-    if [[ -n "${DEBUG:-}" ]] && [[ -f "$LOG" ]]; then
+    if [[ -f "$LOG" ]]; then
         __log info "Log file available at $LOG"
     fi
 }
