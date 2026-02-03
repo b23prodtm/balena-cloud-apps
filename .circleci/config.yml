@@ -26,7 +26,15 @@ jobs:
           - v1-dependencies-{{ checksum "package.json" }}
           # fallback to using the latest cache if no exact match is found
           - v1-dependencies-
-      - run: yarn
+      - run:
+          name: Install Yarn
+          command: |
+            npm install -g corepack \
+            && corepack enable \
+            && corepack prepare yarn@4 --activate \
+            && corepack install -g yarn \
+            && yarn install --immutable \
+            && yarn cache clean
       - run:
           name: Run tests
           command: |
