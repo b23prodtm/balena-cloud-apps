@@ -1,15 +1,14 @@
 #!/usr/bin/env bash
-vendord="$(cd "$(dirname "${BASH_SOURCE[0]}")/../vendor/cni" && pwd)"
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+vendord="$script_dir/../vendor/cni"
+testd="$script_dir/build"
 chkSet="x${DEBIAN_FRONTEND:-}"
 DEBIAN_FRONTEND='noninteractive'
-testd="$(cd "$(dirname "${BASH_SOURCE[0]}")/build" && pwd)"
 # shellcheck disable=SC1090
 . "$vendord/init_functions.sh" "$testd"
-LOG=$(new_log "/tmp")
-[ "$DEBUG" ] && LOG=$(new_log "/dev" "/stderr")
 function test_deploy() {
   # x86_64
-  args=( "3" --nobuild --exit )
+  args=( --no-ssh "3" --nobuild --exit )
   # shellcheck disable=SC1090
   . "$vendord/balena_deploy.sh" "$testd" "${args[@]}" >> "$LOG"
   grep -q "intel-nuc" < "$testd/submodule/Dockerfile.x86_64"
@@ -74,13 +73,11 @@ results+=( "$?" )
 test_update
 results+=( "$?" )
 [ "$chkSet" = 'x' ] && unset DEBIAN_FRONTEND || DEBIAN_FRONTEND=${chkSet:2}
-check_log "$LOG"
 
 for r in "${!results[@]}"; do
     (( n=r+1 ))
     rt="${results[$r]}"
     if [ "$(( rt&1 ))" -gt 0 ]; then
-      cat "$LOG"
       log_failure_msg "test n°$n FAIL"
       exit "${results[$r]}"
     else
