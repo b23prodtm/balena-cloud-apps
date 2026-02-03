@@ -10,15 +10,15 @@
     "test": "cd test && ./build-test.sh && exit 0"
   },
   "bin": {
-    "clone_project": "vendor/cni/clone_project.sh",
     "auto_reboot": "vendor/cni/auto_reboot.sh",
     "balena_deploy": "vendor/cni/balena_deploy.sh",
+    "clone_project": "vendor/cni/clone_project.sh",
     "docker_build": "vendor/cni/docker_build.sh",
-    "init_functions": "vendor/cni/init_functions.sh",
-    "post_install": "vendor/cni/post_install.sh",
-    "git_retag": "vendor/cni/git_retag.sh",
     "git_fix_issue": "vendor/cni/git_fix_issue.sh",
     "git_fix_issue_close": "vendor/cni/git_fix_issue_close.sh",
+    "git_retag": "vendor/cni/git_retag.sh",
+    "init_functions": "vendor/cni/init_functions.sh",
+    "post_install": "vendor/cni/post_install.sh",
     "update_templates": "vendor/cni/update_templates.sh"
   },
   "keywords": [
@@ -35,13 +35,11 @@
     "type": "git",
     "url": "git+ssh://git@github.com/b23prodtm/balena-cloud-apps.git"
   },
-  "optionalDependencies": {},
   "dependencies": {
     "shelljs": "^0.10.0"
   },
   "bugs": {
     "url": "https://github.com/b23prodtm/balena-cloud-apps/issues"
   },
-  "homepage": "https://github.com/b23prodtm/balena-cloud-apps#readme",
-  "devDependencies": {}
+  "homepage": "https://github.com/b23prodtm/balena-cloud-apps#readme"
 }
