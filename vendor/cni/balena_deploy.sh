@@ -226,30 +226,28 @@ select_arch() {
 # Collect flags from BALENA_PROJECTS_FLAGS
 #######################################
 get_flags_array() {
-  local -n _out=$1
-  _out=()
+  local -n _out=()
   # shellcheck disable=SC2154
   if [ "${#BALENA_PROJECTS_FLAGS[@]:-0}" -gt 0 ]; then
     log_daemon_msg "Found ${#BALENA_PROJECTS_FLAGS[@]} flags in BALENA_PROJECTS_FLAGS" >>"$LOG"
     # shellcheck disable=SC2154
     _out=("${BALENA_PROJECTS_FLAGS[@]}")
   fi
-  echo "$_out[@]"
+  echo "${_out[@]}"
 }
 
 #######################################
 # Collect projects from BALENA_PROJECTS
 #######################################
 get_projects_array() {
-  local -n _out=$1
-  _out=(".")
+  local -n _out=(".")
   # shellcheck disable=SC2154
   if [ "${#BALENA_PROJECTS[@]:-0}" -gt 0 ]; then
     log_daemon_msg "Found ${#BALENA_PROJECTS[@]} projects in BALENA_PROJECTS" >>"$LOG"
     # shellcheck disable=SC2154
     _out=("${BALENA_PROJECTS[@]}")
   fi
-  echo "$_out[@]"
+  echo "${_out[@]}"
 }
 
 #######################################
