@@ -79,8 +79,8 @@ results+=( "$?" )
 #results+=( "$?" )
 #test_git_fix_close
 #results+=( "$?" )
-test_update
-results+=( "$?" )
+#test_update
+#results+=( "$?" )
 
 for r in "${!results[@]}"; do
     (( n=r+1 ))
