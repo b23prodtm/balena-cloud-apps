@@ -46,6 +46,7 @@ jobs:
             $SUDO chmod +x /usr/local/bin/init_functions
             git config --global user.email "b23prodtm@users.sorceforge.net"
             git config --global user.name "B R T"
+            git init
             yarn test
 
       - save_cache:
