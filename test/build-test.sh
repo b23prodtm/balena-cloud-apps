@@ -39,7 +39,7 @@ function test_docker_3() {
   docker image ls -q "${args[2]}*"
 }
 function test_docker() {
-  args=( "${testd}/deployment/images/dind-php7" "betothreeprod/dind-php7:latest" "armhf" )
+  args=( "${testd}/deployment/images/dind-php7" "betothreeprod/dind-php7:latest" "armhf")
   # shellcheck disable=SC1090
   bash -c "$vendord/docker_build.sh ${args[*]}" || true
   docker image ls -q "${args[2]}*"

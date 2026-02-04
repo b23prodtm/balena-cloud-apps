@@ -89,6 +89,7 @@ fi
 BUILD_CMD="docker buildx build \
   --builder $BUILDER \
   --platform $PLATFORM \
+  -f Dockerfile.${BALENA_ARCH} \
   -t $NAME:$TAG \
   $DIR"
 
