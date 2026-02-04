@@ -48,8 +48,8 @@ function test_git_fix() {
   args=( "https://github.com/b23prodtm/balena-cloud-apps.git" "balena-cloud-apps" "1" )
   cd "$testd" && \
   git clone "${args[0]}"
+  # shellcheck disable=SC1090,SC2015
   cd "${args[1]}" && \
-  # shellcheck disable=SC1090,SC2015 \
   bash -c "$vendord/git_fix_issue.sh ${args[2]}" || true
 }
 function test_git_fix_close() {

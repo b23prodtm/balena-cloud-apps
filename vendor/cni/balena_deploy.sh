@@ -524,7 +524,7 @@ setup_ssh_agent() {
     ssh-add "$pkey" >> "$LOG" 2>&1
   done
   for pkey in "$HOME"/.ssh/*id_ed25519; do
-    ssh-add "$pkeu" >>"$LOG" 2>&1
+    ssh-add "$pkey" >>"$LOG" 2>&1
   done
 }
 
