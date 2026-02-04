@@ -3,5 +3,5 @@ services:
   testsvc:
     docker:
       context: submodule
-      dockerfile: Dockerfile.aarch64
-    image: betothreeprod/generic-aarch64
+      dockerfile: Dockerfile.armhf
+    image: betothreeprod/raspberrypi3
