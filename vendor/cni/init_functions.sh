@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 # Portable logging library with systemd autodetect
-# Backward‑compatible with original init_functions.sh
 
 # ---------------------------------------------------------------------------
 # LOG LEVELS

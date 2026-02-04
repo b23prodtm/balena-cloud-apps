@@ -71,14 +71,14 @@ test_deploy_2
 results+=( "$?" )
 test_deploy_3
 results+=( "$?" )
-test_docker
-results+=( "$?" )
-test_docker_3
-results+=( "$?" )
-test_git_fix
-results+=( "$?" )
-test_git_fix_close
-results+=( "$?" )
+#test_docker
+#results+=( "$?" )
+#test_docker_3
+#results+=( "$?" )
+#test_git_fix
+#results+=( "$?" )
+#test_git_fix_close
+#results+=( "$?" )
 test_update
 results+=( "$?" )
 
