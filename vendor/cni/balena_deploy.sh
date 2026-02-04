@@ -46,7 +46,7 @@ run_cmd() {
 #######################################
 print_usage() {
   cat <<EOF
-Usage: ${SCRIPT_NAME} [options] <project_root|${BASH_SOURCE[0]}> [target]
+Usage: ${SCRIPT_NAME} <project_root|${BASH_SOURCE[0]}> [options] [target]
 
 Options:
   --dry-run        Do not execute commands, only print them.
@@ -616,7 +616,7 @@ run_target() {
       ;;
     0|--exit)
       log_daemon_msg "deploy's exiting..." >>"$LOG"
-      return 1
+      return 0
       ;;
     *)
       log_warning_msg "Unknown target: $target"
