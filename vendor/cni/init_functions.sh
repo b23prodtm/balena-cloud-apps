@@ -80,7 +80,7 @@ new_log() {
     local script_name
     script_name="$(basename "$0")"
 
-    LOG="/tmp/log/${script_name}/$(date +%Y%m%d_%H%M%S).log"
+    LOG="/tmp/log/${script_name#.*}/$(date +%Y%m%d_%H%M%S).log"
     mkdir -p "$(dirname "$LOG")"
 
     touch "$LOG" || {
