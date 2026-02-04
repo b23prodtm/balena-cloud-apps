@@ -1,60 +1,64 @@
 #!/usr/bin/env bash
+set -eu
+
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
 vendord="$script_dir/../vendor/cni"
 testd="$script_dir/build"
+
 chkSet="x${DEBIAN_FRONTEND:-}"
-DEBIAN_FRONTEND='noninteractive'
+export DEBIAN_FRONTEND='noninteractive'
 # shellcheck disable=SC1090
-. "$vendord/init_functions.sh" "$testd"
+. "$vendord/init_functions.sh"
+
 function test_deploy() {
   # x86_64
-  args=( --no-ssh "3" --nobuild --exit )
+  args=( --no-ssh "$testd" "3" --nobuild --exit )
   # shellcheck disable=SC1090
-  . "$vendord/balena_deploy.sh" "$testd" "${args[@]}" >> "$LOG"
+  bash -c "$vendord/balena_deploy.sh ${args[@]}"
   grep -q "intel-nuc" < "$testd/submodule/Dockerfile.x86_64"
 }
 function test_deploy_2() {
   # aarch64
-  args=( "2" --nobuild --exit )
+  args=( "$testd" "2" --nobuild --exit )
   # shellcheck disable=SC1090
-  . "$vendord/balena_deploy.sh" "$testd" "${args[@]}" >> "$LOG"
+  bash -c "$vendord/balena_deploy.sh ${args[@]}"
   grep -q "generic-aarch64" < "$testd/submodule/Dockerfile.aarch64"
 }
 function test_deploy_3() {
   # armhf
-  args=( "1" --nobuild --exit )
+  args=( "$testd" "1" --nobuild --exit )
   # shellcheck disable=SC1090
-  . "$vendord/balena_deploy.sh" "$testd" "${args[@]}" >> "$LOG"
+  bash -c "$vendord/balena_deploy.sh ${args[@]}"
   grep -q "raspberrypi3" < "$testd/submodule/Dockerfile.armhf"
 }
 function test_docker_3() {
-  args=( "${testd}/submodule" -m . "betothreeprod/raspberrypi3" "$BALENA_ARCH" )
+  args=( "${testd}/submodule" . "betothreeprod/raspberrypi3:latest" "armhf" )
   # shellcheck disable=SC1090
-  . "$vendord/docker_build.sh" "${args[@]}" >> "$LOG"
+  bash -c "$vendord/docker_build.sh ${args[@]}"
   docker image ls -q "${args[3]}*"
 }
 function test_docker() {
-  args=( "${testd}/deployment/images/dind-php7" -m . "betothreeprod/dind-php7" "$BALENA_ARCH" )
+  args=( "${testd}/deployment/images/dind-php7" . "betothreeprod/dind-php7:latest" "armhf" )
   # shellcheck disable=SC1090
-  . "$vendord/docker_build.sh" "${args[@]}" >> "$LOG"
+  bash -c "$vendord/docker_build.sh ${args[@]}"
   docker image ls -q "${args[3]}*"
 }
 function test_git_fix() {
   args=( "https://github.com/b23prodtm/balena-cloud-apps.git" "balena-cloud-apps" "1" )
   git clone "${args[0]}" && cd "${args[1]}" || return
   # shellcheck disable=SC1090
-  . "$vendord/git_fix_issue.sh" "${args[2]}" >> "$LOG"
+  bash -c "$vendord/git_fix_issue.sh ${args[2]}"
 }
 function test_git_fix_close() {
   test_git_fix
   args=( "1" "master" )
   # shellcheck disable=SC1090
-  . "$vendord/git_fix_issue_close.sh" "${args[@]}" >> "$LOG"
+  bash -c "$vendord/git_fix_issue_close.sh ${args[@]}"
 }
 function test_update() {
   args=( "-d" "$testd" )
   # shellcheck disable=SC1090
-  . "$vendord/update_templates.sh" "${args[@]}" >> "$LOG"
+  bash -c "$vendord/update_templates.sh ${args[@]}"
 }
 test_deploy
 results=( "$?" )
