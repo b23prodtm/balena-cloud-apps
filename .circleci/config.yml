@@ -42,8 +42,8 @@ jobs:
               export SUDO="sudo";
             fi
             set -e
-            $SUDO cp vendor/cni/init_functions.sh /usr/local/bin/init_functions
-            $SUDO chmod +x /usr/local/bin/init_functions
+            git config --global user.email "b23prodtm@users.sorceforge.net"
+            git config --global user.name "B R T"
             yarn test
 
       - save_cache:

@@ -1,18 +1,9 @@
 #!/usr/bin/env bash
-dir="."
-usage=( "usage $0" "[-d <project_root>]" )
 
 if [ "$#" -gt 0 ]; then
-  while true; do
-    case $1 in
-      -d)
-        dir="$2"
-        break;;
-      *)
-        printf "%s\n" "${usage[@]}"
-        exit 0;;
-    esac
-  done
+  dir="$1"
+else
+  dir="."
 fi
 
 ARC=(armhf x86_64 aarch64)

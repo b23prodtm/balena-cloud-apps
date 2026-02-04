@@ -1,68 +1,111 @@
-#!/usr/bin/env bash
-set -u
-[ "$#" -eq 0 ] && echo "usage $0 <work_dir> <args>" && exit 0
-[ -f "$1" ] && set -- "$(cd "$(dirname "$1")" && pwd)" "${@:2}"
-workd="$(cd "$1" && pwd)"; shift
-banner=( "" "[$0] BASH ${BASH_SOURCE[0]}" "$workd" "" ); printf "%s\n" "${banner[@]}"
-[ "${DEBUG:-0}" != 0 ] && printf "passed arg %s\n" "$*"
-usage=("" \
-"Usage: $0 [options] <work_dir> <work_sub_dir> <container_name>:[IMG_TAG] [BALENA_ARCH]" \
-"                    <-f, --force> <-e> <-m, --make-space>" \
-"" \
-"                    Base balenalib/raspberrypi3 images may be" \
-"                    built from a Mac or PC without any specific" \
-"                    cross-build backend, just set BALENA_ARCH to ARM32" \
-"                    or ARM64." \
-"" \
-"          work_sub_dir:    Path relative to $0" \
-"          container_name:  Set to username/container to push to" \
-"                           Docker.io, e.g. myself/cakephp2-image x86_64" \
-"          IMG_TAG:         Set as environment variable IMG_TAG" \
-"                           File <BALENA_ARCH>.env" \
-"          BALENA_ARCH:        1|arm32*|armv7l|armhf   ARMv7 OS" \
-"                           2|arm64*|aarch64        ARMv8 OS" \
-"                           3|amd64|x86_64          All X86 64 bits" \
-"                                                   OS (Mac or PC)" \
-"More about docker tag:" \
-"       docker tag <repository/image:tag> <new_repository/new_image:tag>" \
-"" \
-"          Available options:" \
-"          -f,--force:      Set docker daemon restart flag on" \
-"          -e:              Reset docker machine environment variables" \
-"          -m,--make-space: Remove exited containers to free some disk space" \
-"          -h,--help:       This help" \
-"")
-[ "$#" -lt 3 ] && printf "%s\n" "${usage[@]}" && exit 0
-while [[ "$#" -gt 0 ]]; do case $1 in
-  -[fF]*|--force)
-    docker-machine restart default;;
-  -[eE]*)
-    eval "$(docker-machine env)";;
-  -[mM]*|--make-space)
-    docker rm "$(docker ps -q -a -f 'status=exited')" 2> /dev/null \
-    || docker volume rm "$(docker volume ls -qf dangling=true)" 2> /dev/null || true
-    ;;
-  -[hH]*|--help)
-    printf "%s\n" "${usage[@]}"
-    exit 0;;
-  *)
-    DIR="$1"
-    NAME=$(echo "$2" | cut -d: -f1)
-    TAG=$(echo "$2" | cut -d: -f2)
-    BALENA_ARCH="$3"
-    IMG_TAG=${IMG_TAG:-"$TAG"}
-    shift 2
-    ;;
-esac; shift; done
-# shellcheck disable=SC1090
-. "${workd}/.env" && . "${workd}/common.env"
-docker build -f "$workd/$DIR/Dockerfile.${BALENA_ARCH}" -t "$NAME:$IMG_TAG" "$workd/$DIR"
-container=$(echo "$NAME" | cut -d/ -f2-)
-docker run --rm -itd --name "$container" "$NAME:$IMG_TAG" &
-sleep 2
-container="$(docker ps -q -a -f "name=$container")"
-[ "$container" ] && docker stop "$container"
-docker login docker.io -u "${DOCKER_USER:-}" -p "${DOCKER_PASS:-}"
-docker push "$NAME:$IMG_TAG"
-docker tag "$NAME:$IMG_TAG" "$NAME:$IMG_TAG-${BALENA_ARCH}"
-docker push "$NAME:$IMG_TAG-${BALENA_ARCH}"
+#!/bin/sh
+set -eu
+
+# -----------------------------------------
+# Rootless-friendly multi-arch build script
+# POSIX sh + docker buildx
+# -----------------------------------------
+
+usage() {
+    echo "Usage: $0 <dir> <image[:tag]> <BALENA_ARCH> [options]" >&2
+    echo "Options:" >&2
+    echo "  -p, --push        Push image after build" >&2
+    echo "  -l, --load        Load image locally (single-arch only)" >&2
+    echo "  -n, --dry-run     Show commands only" >&2
+    exit 1
+}
+
+# -----------------------------------------
+# BALENA_ARCH → docker platform
+# -----------------------------------------
+map_platform() {
+    case "$1" in
+        amd64|x86_64)
+            echo "linux/amd64"
+            ;;
+        arm64|aarch64)
+            echo "linux/arm64"
+            ;;
+        armv7hf|armv7|armhf)
+            echo "linux/arm/v7"
+            ;;
+        armv6|rpi)
+            echo "linux/arm/v6"
+            ;;
+        *)
+            echo "Unknown BALENA_ARCH: $1" >&2
+            exit 1
+            ;;
+    esac
+}
+
+# -----------------------------------------
+# Args
+# -----------------------------------------
+[ $# -lt 3 ] && usage
+
+DIR=$1
+IMAGE=$2
+BALENA_ARCH=$3
+shift 3
+
+PLATFORM=$(map_platform "$BALENA_ARCH")
+
+PUSH=0
+LOAD=0
+DRYRUN=0
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -p|--push) PUSH=1 ;;
+        -l|--load) LOAD=1 ;;
+        -n|--dry-run) DRYRUN=1 ;;
+        *) echo "Unknown option: $1" >&2; exit 1 ;;
+    esac
+    shift
+done
+
+# -----------------------------------------
+# Image name + tag
+# -----------------------------------------
+NAME=$(echo "$IMAGE" | cut -d: -f1)
+TAG=$(echo "$IMAGE" | cut -s -d: -f2)
+[ -z "$TAG" ] && TAG="latest"
+
+# -----------------------------------------
+# Ensure buildx builder
+# -----------------------------------------
+BUILDER="rootless-multiarch"
+
+if ! docker buildx inspect "$BUILDER" >/dev/null 2>&1; then
+    docker buildx create --name "$BUILDER" --use >/dev/null
+else
+    docker buildx use "$BUILDER" >/dev/null
+fi
+
+# -----------------------------------------
+# Build command
+# -----------------------------------------
+BUILD_CMD="docker buildx build \
+  --builder $BUILDER \
+  --platform $PLATFORM \
+  -f Dockerfile.${BALENA_ARCH} \
+  -t $NAME:$TAG \
+  $DIR"
+
+if [ "$PUSH" -eq 1 ]; then
+    BUILD_CMD="$BUILD_CMD --push"
+fi
+
+if [ "$LOAD" -eq 1 ]; then
+    BUILD_CMD="$BUILD_CMD --load"
+fi
+
+echo "==> Building $NAME:$TAG for $BALENA_ARCH ($PLATFORM)"
+echo "$BUILD_CMD"
+
+if [ "$DRYRUN" -eq 0 ]; then
+    sh -c "$BUILD_CMD"
+fi
+
+echo "Done."

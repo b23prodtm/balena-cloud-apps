@@ -1,67 +1,92 @@
 #!/usr/bin/env bash
-[ "$#" -eq 0 ] && echo "usage $0 \${BASH_SOURCE[0]} <args>" && exit 0
-banner=( "" "[$0] BASH ${BASH_SOURCE[0]}" "" ); printf "%s\n" "${banner[@]}"
-function log_daemon_msg() {
-  printf "* %s\n" "$@"
-}
-function log_progress_msg() {
-  printf "+ %s\n" "$@"
-}
-function log_warning_msg() {
-  printf "! %s\n" "$@"
-}
-function log_failure_msg() {
-  printf "[!] %s\n" "$@"
-}
-function log_success_msg() {
-  printf "[*] %s\n" "$@"
-}
-function log_end_msg() {
-  case "$1" in
-    0)
-      printf "[>]                            %s\n" "[OK]"
-      ;;
-    [1-9]+)
-      printf "[x]                          %s\n" "[fail]"
-      ;;
-    *) printf "%s\n" "$@"
-      ;;
-  esac
-}
-if [ -f /lib/lsb/init-functions ]; then
-  # lsb-base package (not available in alpine linux)
-  # shellcheck disable=SC1091
-  . /lib/lsb/init-functions
-fi
-# Dsiplay message with time and thread if logger debug Kit available
-function slogger() {
-  [ -f /dev/log ] && logger "$@" && return
-  [ "$#" -gt 1 ] && shift
-  log_daemon_msg "$@"
-}
-function log_size() {
-  [ "$#" = 0 ] && log_failure_msg "File not found" && return
-  printf "num_entries=%s\n" "$(wc -l "$1" | awk '{ print $1 }')"
-}
-# Journal rotation
-LOG_MAX_ROLLOUT=${LOG_MAX_ROLLOUT:-500}
+# Portable logging library with systemd autodetect
 
-# @param 1 folder
-# @param 2 filename
-function new_log() {
-  temp="/tmp/log/$(basename "$0" .sh)"
-  LOG="$(cd "${1:-$temp}" && pwd)/${2:-"$(date +%Y-%m-%d_%H:%M).log"}" \
-  && mkdir -p "$(dirname "$LOG")"
-  touch "$LOG" && chmod 1777 "$LOG" # sticky bit
-  if [ -n "${DEBUG:-}" ] && [ "$(log_size "$LOG" | cut -d= -f2)" -gt "$LOG_MAX_ROLLOUT" ]; then
-    mv "$LOG" "$LOG.$(date +%Y-%m-%d_%H:%M)" && new_log "$@"
-    return
-  fi
-  # return value
-  printf "%s\n" "$LOG"
+# ---------------------------------------------------------------------------
+# LOG LEVELS
+# ---------------------------------------------------------------------------
+
+LOG_LEVEL="${LOG_LEVEL:-info}"
+
+# If DEBUG=1, force log level to debug
+if [ "${DEBUG:-0}" = "1" ]; then
+    LOG_LEVEL="debug"
+fi
+
+# Map log levels to numeric values
+__log_level_num() {
+    case "$1" in
+        debug) echo 0 ;;
+        info)  echo 1 ;;
+        warn)  echo 2 ;;
+        error) echo 3 ;;
+        *)     echo 1 ;; # default to info
+    esac
 }
-function check_log() {
-  if [ -n "${DEBUG:-}" ] && [[ $(wc -l "$LOG" | awk '{ print $1 }') -gt 0 ]]; then
-    log_daemon_msg "Find the log file at $LOG and read more detailed information."
-  fi
+
+CURRENT_LEVEL_NUM="$(__log_level_num "$LOG_LEVEL")"
+
+# ---------------------------------------------------------------------------
+# SYSTEMD DETECTION
+# ---------------------------------------------------------------------------
+
+if command -v systemd-cat >/dev/null 2>&1; then
+    __USE_SYSTEMD=1
+else
+    __USE_SYSTEMD=0
+fi
+
+# ---------------------------------------------------------------------------
+# CORE LOGGER
+# ---------------------------------------------------------------------------
+
+__log() {
+    local level="$1"; shift
+    local msg="$*"
+
+    local level_num
+    level_num="$(__log_level_num "$level")"
+
+    # Skip messages below current log level
+    if [ "$level_num" -lt "$CURRENT_LEVEL_NUM" ]; then
+        return 0
+    fi
+
+    if [ "$__USE_SYSTEMD" -eq 1 ]; then
+        # systemd logging
+        systemd-cat --priority="$level" --identifier="$(basename "$0")" echo "$msg"
+    else
+        # portable fallback
+        printf "[%s] %s: %s\n" "$(date +%H:%M:%S)" "$level" "$msg"
+    fi
+}
+
+# ---------------------------------------------------------------------------
+# PUBLIC API (backward compatible)
+# ---------------------------------------------------------------------------
+
+log_daemon_msg()   { __log info  "$*"; }
+log_progress_msg() { __log info  "$*"; }
+log_success_msg()  { __log info  "$*"; }
+log_failure_msg()  { __log error "$*"; }
+
+# Debug logging
+log_debug() { __log debug "$*"; }
+
+# ---------------------------------------------------------------------------
+# LOG FILE SUPPORT (optional)
+# ---------------------------------------------------------------------------
+
+new_log() {
+    local script_name
+    script_name="$(basename "$0")"
+
+    LOG="/tmp/log/${script_name#.*}/$(date +%Y%m%d_%H%M%S).log"
+    mkdir -p "$(dirname "$LOG")"
+
+    touch "$LOG" || {
+        __log error "Failed to create log file: $LOG"
+        return 1
+    }
+    # return file path
+    printf "%s\n" "$LOG"
 }
