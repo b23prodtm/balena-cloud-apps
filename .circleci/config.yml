@@ -44,7 +44,8 @@ jobs:
             set -e
             $SUDO cp vendor/cni/init_functions.sh /usr/local/bin/init_functions
             $SUDO chmod +x /usr/local/bin/init_functions
-            yarn test
+            git config --global user.email "b23prodtm@users.sorceforge.net"
+            git config --global user.name "B R T"            yarn test
 
       - save_cache:
           paths:
