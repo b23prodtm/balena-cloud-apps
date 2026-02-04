@@ -1,6 +1,6 @@
 {
   "name": "balena-cloud-apps",
-  "version": "1.0.49",
+  "version": "1.1.0",
   "description": "Shell scripts package to the containers native interface BalenaOS for the Raspberry Pi.",
   "directories": {
     "test": "test"
