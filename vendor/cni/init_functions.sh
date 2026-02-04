@@ -44,7 +44,8 @@ __log() {
     local level="$1"; shift
     local msg="$*"
 
-    local level_num="$(__log_level_num "$level")"
+    local level_num
+    level_num="$(__log_level_num "$level")"
 
     # Skip messages below current log level
     if [ "$level_num" -lt "$CURRENT_LEVEL_NUM" ]; then

@@ -520,8 +520,12 @@ setup_ssh_agent() {
 
   # Add keys, ignore failures
   # shellcheck disable=SC2086
-  [ ! -f "$HOME"/.ssh/*id_rsa ] && ssh-add "$HOME"/.ssh/*id_rsa >> "$LOG" 2>&1
-  [ ! -f "$HOME"/.ssh/*id_ed25519 ] && ssh-add "$HOME"/.ssh/*id_ed25519 >>"$LOG" 2>&1
+  for pkey in "$HOME"/.ssh/*id_rsa; do
+    ssh-add "$pkey" >> "$LOG" 2>&1
+  done
+  for pkey in "$HOME"/.ssh/*id_ed25519; do
+    ssh-add "$pkeu" >>"$LOG" 2>&1
+  done
 }
 
 #######################################
