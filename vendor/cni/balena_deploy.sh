@@ -295,8 +295,8 @@ set_arch_in_files() {
 # Marker setup
 #######################################
 set_markers() {
-  export MARK_BEGIN={MARK_BEGIN:-"RUN [^a-z]*cross-build-start[^a-z]*"}
-  export MARK_END={MARK_END:-"RUN [^a-z]*cross-build-end[^a-z]*"}
+  export MARK_BEGIN=${MARK_BEGIN:-"RUN [^a-z]*cross-build-start[^a-z]*"}
+  export MARK_END=${MARK_END:-"RUN [^a-z]*cross-build-end[^a-z]*"}
   export ARM_BEGIN="### ARM BEGIN"
   export ARM_END="### ARM END"
 }
