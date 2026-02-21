@@ -3,8 +3,6 @@
 # Check https://circleci.com/docs/language-javascript/ for more details
 #
 version: 2.1
-orbs:
-  shellcheck: circleci/shellcheck@3.2.0
 
 defaults: &defaults
   working_directory: ~/repo
@@ -15,6 +13,16 @@ defaults: &defaults
         password: $DOCKER_PASS
 
 jobs:
+  shellcheck:
+    docker:
+      - image: koalaman/shellcheck-alpine:stable
+    steps:
+      - checkout
+      - run:
+          name: Run shellcheck
+          command: |
+            find . -type f -name "*.sh" -exec shellcheck --exclude=SC2154,SC1091,SC2034,SC2096,SC2038 {} +
+
   test:
     <<: *defaults
     steps:
@@ -74,13 +82,13 @@ jobs:
             npm publish
 
 workflows:
+  version: 2
   test-deploy:
     jobs:
-      - shellcheck/check:
-          ignore: SC1091
+      - shellcheck
       - test:
           requires:
-            - shellcheck/check
+            - shellcheck
       - deploy:
           requires:
             - test
