@@ -29,7 +29,8 @@ CURRENT_LEVEL_NUM="$(__log_level_num "$LOG_LEVEL")"
 # SYSTEMD DETECTION
 # ---------------------------------------------------------------------------
 
-if command -v systemd-cat >/dev/null 2>&1; then
+# Use systemd only if binary exists and journal socket is available
+if command -v systemd-cat >/dev/null 2>&1 && [ -S /run/systemd/journal/socket ]; then
     __USE_SYSTEMD=1
 else
     __USE_SYSTEMD=0
@@ -53,7 +54,13 @@ __log() {
 
     if [ "$__USE_SYSTEMD" -eq 1 ]; then
         # systemd logging
-        systemd-cat --priority="$level" --identifier="$(basename "$0")" echo "$msg"
+        # Normalize level for systemd and send message via stdin
+        case "$level" in
+            warn) sd_level=warning ;;
+            error) sd_level=err ;;
+            *) sd_level="$level" ;;
+        esac
+        printf "%s\n" "$msg" | systemd-cat --priority="$sd_level" --identifier="$(basename "$0")"
     else
         # portable fallback
         printf "[%s] %s: %s\n" "$(date +%H:%M:%S)" "$level" "$msg"
