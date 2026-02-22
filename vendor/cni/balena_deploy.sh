@@ -605,7 +605,6 @@ run_target() {
       slogger -st docker "Disable cross-build (buildx off)"
       native_compose_file_set
       cross_build_start -d
-      native_compose_file_set
       if command -v balena >/dev/null 2>&1; then
         local fleets
         fleets=$(balena fleet list | awk 'NR>1{print $2}')
