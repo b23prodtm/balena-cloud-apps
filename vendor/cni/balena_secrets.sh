@@ -9,8 +9,12 @@ usage() {
   exit 0
 }
 
-if [ "$#" -lt 1 ]; then usage; fi
-cd "$1" && shift || usage
+if [ "$#" -lt 1 ]; then
+  usage
+else
+  cd "$1" || usage
+  shift
+fi
 
 # Define the directory containing the secrets
 SECRETS_DIR=".balena/secrets"
@@ -105,12 +109,10 @@ while [ "$#" -gt 0 ]; do case "$1" in
     ;;
   -[hH]*|--help*)
     usage
-    exit 0
     ;;
   *)
     printf "%s\n" "Wrong argument: $1"
     usage
-    exit 1
     ;;
 esac; shift; done
 
