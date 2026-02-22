@@ -5,10 +5,11 @@ TOPDIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
 # Usage
 usage() {
-  printf "\%sn" "Usage: ${BASH_SOURCE[0]} <dir> [--mount|-m] [-r] [-w] [-x] [-d <folder>]"
+  printf "%s\n" "Usage: ${BASH_SOURCE[0]} <dir> [--mount|-m] [-r] [-w] [-d <folder>]"
   exit 0
 }
 
+if [ "$#" -lt 1 ]; then usage; fi
 cd "$1" && shift || usage
 
 # Define the directory containing the secrets
@@ -63,9 +64,6 @@ read_secrets() {
   exp=""; sep=""
   while [ "$#" -gt 0 ]; do case "$1" in
     -[rR]*);;
-    -[xX]*)
-      exp="echo "
-      ;;
     -[eE]*)
       exp="export "
       ;;
@@ -94,7 +92,7 @@ read_secrets() {
 # prints secrets VARIABLES="$(cat /run/secret/***)"
 mount=""
 while [ "$#" -gt 0 ]; do case "$1" in
-  -[xXeERr]*)
+  -[eERr]*)
     read_secrets "$@"
     exit 0
     ;;
