@@ -10,7 +10,6 @@ set -Eeuo pipefail
 SCRIPT_NAME=${0##*/}
 DRY_RUN=0
 USE_SSH=1
-LOG=""
 PROJECT_ROOT=""
 ARCH=""
 BALENA_ARCH=""
@@ -215,7 +214,7 @@ select_arch() {
     exit 1
   fi
 
-  run_cmd ln -vsf "$PROJECT_ROOT/${BALENA_ARCH}.env" "$PROJECT_ROOT/.env" >>"$LOG" 2>&1
+  run_cmd ln -vsf "$PROJECT_ROOT/${BALENA_ARCH}.env" "$PROJECT_ROOT/.env"
   # shellcheck disable=SC1090
   . "$PROJECT_ROOT/.env"
   # shellcheck disable=SC1090
@@ -230,8 +229,8 @@ get_flags_array() {
   local -n _out=$1
   _out=()
   # shellcheck disable=SC2154
-  if [ "${#BALENA_PROJETS_FLAGS[@]:-0}" -gt 0 ]; then
-    log_daemon_msg "Found ${#BALENA_PROJECTS_FLAGS[@]} flags in BALENA_PROJECTS_FLAGS" >>"$LOG"
+  if [ "${#BALENA_PROJECTS_FLAGS[@]}" -gt 0 ]; then
+    log_daemon_msg "Found ${#BALENA_PROJECTS_FLAGS[@]} flags in BALENA_PROJECTS_FLAGS"
     # shellcheck disable=SC2154,SC2034
     _out=("${BALENA_PROJECTS_FLAGS[@]}")
   fi
@@ -245,8 +244,8 @@ get_projects_array() {
   local -n _out=$1
   _out=(".")
   # shellcheck disable=SC2154
-  if [ "${#BALENA_PROJECTS[@]:-0}" -gt 0 ]; then
-    log_daemon_msg "Found ${#BALENA_PROJECTS[@]} projects in BALENA_PROJECTS" >>"$LOG"
+  if [ "${#BALENA_PROJECTS[@]}" -gt 0 ]; then
+    log_daemon_msg "Found ${#BALENA_PROJECTS[@]} projects in BALENA_PROJECTS"
     # shellcheck disable=SC2154,SC2034
     _out=("${BALENA_PROJECTS[@]}")
   fi
@@ -299,6 +298,8 @@ set_markers() {
   export MARK_END="RUN [^a-z]*cross-build-end[^a-z]*"
   export BALENA_BEGIN="### BALENA BEGIN"
   export BALENA_END="### BALENA END"
+  export MOUNT_BEGIN="RUN [^a-z]--mount.*"
+  export MOUNT_END="[^a-z]--mount.*"
   export BUILDKIT_BEGIN="### BUILDKIT BEGIN"
   export BUILDKIT_END="### BUILDKIT END"
 }
@@ -342,7 +343,7 @@ comment_blocks() {
     shift
   done
 
-  run_cmd sed -i.x.old -E -f "${file}.sed" "$file" >>"$LOG" 2>&1
+  run_cmd sed -i.x.old -E -f "${file}.sed" "$file"
 }
 
 #######################################
@@ -395,7 +396,7 @@ cross_build_start() {
   if [ "$#" -gt 0 ]; then
     case $1 in
       -d*)
-        log_progress_msg "Disabled Cross-build" >>"$LOG"
+        log_progress_msg "Disabled Cross-build"
         crossbuild=0
         ;;
       *)
@@ -404,7 +405,7 @@ cross_build_start() {
         ;;
     esac
   else
-    log_progress_msg "Enabled Cross-build" >>"$LOG"
+    log_progress_msg "Enabled Cross-build"
   fi
 
   local -a projects=()
@@ -446,7 +447,7 @@ git_commit() {
     git config --local user.email "$githubuserid"
     git config --local user.name "${githubuserid%@*}"
   fi
-  run_cmd git commit -a -m "$msg" >>"$LOG" 2>&1 || true
+  run_cmd git commit -a -m "$msg" || true
 }
 
 #######################################
@@ -460,14 +461,19 @@ native_compose_file_set() {
   fi
   set_arch_in_files "$PROJECT_ROOT/docker-compose.template" "$PROJECT_ROOT/docker-compose.$arch"
   run_cmd cp -vf "$PROJECT_ROOT/docker-compose.$arch" "$PROJECT_ROOT/docker-compose.yml"
+  local -a projects=()
+  get_projects_array projects
 
-  run_cmd ln -vsf "$PROJECT_ROOT/${BALENA_ARCH}.env" "$PROJECT_ROOT/$d/.env" >>"$LOG" 2>&1
-  if [ "$(cd "$PROJECT_ROOT/$d" && pwd)" != "$(pwd)" ]; then
-    run_cmd ln -vsf "$PROJECT_ROOT/common.env" "$PROJECT_ROOT/$d/common.env" >>"$LOG" 2>&1
-  fi
+  local d
+  for d in "${projects[@]}"; do
+    run_cmd ln -vsf "$PROJECT_ROOT/${BALENA_ARCH}.env" "$PROJECT_ROOT/$d/.env"
+    if [ "$(cd "$PROJECT_ROOT/$d" && pwd)" != "$(pwd)" ]; then
+      run_cmd ln -vsf "$PROJECT_ROOT/common.env" "$PROJECT_ROOT/$d/common.env"
+    fi
 
-  set_arch_in_files "$PROJECT_ROOT/$d/Dockerfile.template" "$PROJECT_ROOT/$d/Dockerfile.${BALENA_ARCH}"
-  set_arch_in_files "$PROJECT_ROOT/$d/build.template" "$PROJECT_ROOT/$d/build.${BALENA_ARCH}.sh"
+    set_arch_in_files "$PROJECT_ROOT/$d/Dockerfile.template" "$PROJECT_ROOT/$d/Dockerfile.${BALENA_ARCH}"
+    set_arch_in_files "$PROJECT_ROOT/$d/build.template" "$PROJECT_ROOT/$d/build.${BALENA_ARCH}.sh"
+  done
 }
 
 #######################################
@@ -532,11 +538,9 @@ setup_ssh_agent() {
 
   # Add keys, ignore failures
   # shellcheck disable=SC2086
-  for pkey in "$HOME"/.ssh/*id_rsa; do
-    ssh-add "$pkey" >> "$LOG" 2>&1
-  done
-  for pkey in "$HOME"/.ssh/*id_ed25519; do
-    ssh-add "$pkey" >>"$LOG" 2>&1
+  mapfile -t pkeys < <(find "$HOME/.ssh/" -type f | xargs grep -l "BEGIN.*PRIVATE KEY" )
+  for pkey in "${pkeys[@]}"; do
+    ssh-add "$pkey"
   done
 }
 
@@ -628,7 +632,7 @@ run_target() {
       deploy_deps
       ;;
     0|--exit)
-      log_daemon_msg "deploy's exiting..." >>"$LOG"
+      log_daemon_msg "deploy's exiting..."
       return 0
       ;;
     *)
@@ -681,8 +685,6 @@ main_loop() {
       args=("${args[@]:1}")
     fi
   done
-
-  check_log "$LOG"
 }
 
 #######################################
