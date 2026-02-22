@@ -11,6 +11,7 @@
   "bin": {
     "auto_reboot": "vendor/cni/auto_reboot.sh",
     "balena_deploy": "vendor/cni/balena_deploy.sh",
+    "balena_secrets": "vendor/cni/balena_secrets.sh",
     "clone_project": "vendor/cni/clone_project.sh",
     "docker_build": "vendor/cni/docker_build.sh",
     "git_fix_issue": "vendor/cni/git_fix_issue.sh",

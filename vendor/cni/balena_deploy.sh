@@ -297,8 +297,8 @@ set_arch_in_files() {
 set_markers() {
   export MARK_BEGIN="RUN [^a-z]*cross-build-start[^a-z]*"
   export MARK_END="RUN [^a-z]*cross-build-end[^a-z]*"
-  export ARM_BEGIN="### ARM BEGIN"
-  export ARM_END="### ARM END"
+  export BALENA_BEGIN="### BALENA BEGIN"
+  export BALENA_END="### BALENA END"
   export MOUNT_BEGIN="RUN [^a-z]*--mount.*"
   export MOUNT_END="[^a-z]*--mount.*"
   export BUILDKIT_BEGIN="### BUILDKIT BEGIN"
@@ -315,14 +315,14 @@ comment_blocks() {
   fi
   local file=$1
   if [ "$#" -eq 1 ]; then
-    comment_blocks "$file" -a -c -b
+    comment_blocks "$file" -b -c -k
     return
   fi
 
   : >"${file}.sed"
   while [ "$#" -gt 1 ]; do
     case $2 in
-      -b|--buildkit)
+      -k|--buildkit)
         printf "%s\n" "/${BUILDKIT_BEGIN}/,/${BUILDKIT_END}/s/^[# ]*(.*)/# \\1/g" >>"${file}.sed"
         local sed_rules=(
           "s/[# ]*(${MOUNT_BEGIN})/# \\1/g"
@@ -330,8 +330,8 @@ comment_blocks() {
         )
         printf "%s\n" "${sed_rules[@]}" >>"${file}.sed"
         ;;
-      -a|--arm)
-        printf "%s\n" "/${ARM_BEGIN}/,/${ARM_END}/s/^[# ]*(.*)/# \\1/g" >>"${file}.sed"
+      -b|--balena)
+        printf "%s\n" "/${BALENA_BEGIN}/,/${BALENA_END}/s/^[# ]*(.*)/# \\1/g" >>"${file}.sed"
         ;;
       -c|--cross)
         local sed_rules=(
@@ -357,14 +357,14 @@ uncomment_blocks() {
   fi
   local file=$1
   if [ "$#" -eq 1 ]; then
-    uncomment_blocks "$file" -a -c -b
+    uncomment_blocks "$file" -b -c -k
     return
   fi
 
   : >"${file}.sed"
   while [ "$#" -gt 1 ]; do
     case $2 in
-      -b|--buildkit)
+      -k|--buildkit)
         printf "%s\n" "/${BUILDKIT_BEGIN}/,/${BUILDKIT_END}/s/^(# )+(.*)/\\2/g" >>"${file}.sed"
         local sed_rules=(
           "s/(# )+(${MOUNT_BEGIN})/\\2/g"
@@ -372,8 +372,8 @@ uncomment_blocks() {
         )
         printf "%s\n" "${sed_rules[@]}" >>"${file}.sed"
         ;;
-      -a|--arm)
-        printf "%s\n" "/${ARM_BEGIN}/,/${ARM_END}/s/^(# )+(.*)/\\2/g" >>"${file}.sed"
+      -b|--balena)
+        printf "%s\n" "/${BALENA_BEGIN}/,/${BALENA_END}/s/^(# )+(.*)/\\2/g" >>"${file}.sed"
         ;;
       -c|--cross)
         local sed_rules=(
@@ -397,7 +397,7 @@ cross_build_start() {
   if [ "$#" -gt 0 ]; then
     case $1 in
       -d*)
-        log_progress_msg "$MARK_END" >>"$LOG"
+        log_progress_msg "Disabled Cross-build" >>"$LOG"
         crossbuild=0
         ;;
       *)
@@ -406,7 +406,7 @@ cross_build_start() {
         ;;
     esac
   else
-    log_progress_msg "$MARK_BEGIN" >>"$LOG"
+    log_progress_msg "Enabled Cross-build" >>"$LOG"
   fi
 
   local -a projects=()
@@ -416,25 +416,15 @@ cross_build_start() {
   for d in "${projects[@]}"; do
 
     if [ "$crossbuild" -eq 0 ]; then
-        comment_blocks "$PROJECT_ROOT/$d/Dockerfile.${BALENA_ARCH}" -c -b
-        comment_blocks "$PROJECT_ROOT/docker-compose.${BALENA_ARCH}" -c -b
-      if [ "$BALENA_ARCH" != "x86_64" ]; then
-        uncomment_blocks "$PROJECT_ROOT/$d/Dockerfile.${BALENA_ARCH}" -a
-        uncomment_blocks "$PROJECT_ROOT/docker-compose.${BALENA_ARCH}" -a
-      else
-        comment_blocks "$PROJECT_ROOT/$d/Dockerfile.${BALENA_ARCH}" -a
-        comment_blocks "$PROJECT_ROOT/docker-compose.${BALENA_ARCH}" -a
-      fi
+      comment_blocks "$PROJECT_ROOT/$d/Dockerfile.${BALENA_ARCH}" -c -k
+      comment_blocks "$PROJECT_ROOT/docker-compose.${BALENA_ARCH}" -c -k
+      uncomment_blocks "$PROJECT_ROOT/$d/Dockerfile.${BALENA_ARCH}" -b
+      uncomment_blocks "$PROJECT_ROOT/docker-compose.${BALENA_ARCH}" -b
     else
-        uncomment_blocks "$PROJECT_ROOT/docker-compose.${BALENA_ARCH}" -c -b
-        uncomment_blocks "$PROJECT_ROOT/$d/Dockerfile.${BALENA_ARCH}" -c -b
-      if [ "$BALENA_ARCH" != "x86_64" ]; then
-        uncomment_blocks "$PROJECT_ROOT/docker-compose.${BALENA_ARCH}" -a
-        uncomment_blocks "$PROJECT_ROOT/$d/Dockerfile.${BALENA_ARCH}" -a
-      else
-        comment_blocks "$PROJECT_ROOT/docker-compose.${BALENA_ARCH}" -a
-        comment_blocks "$PROJECT_ROOT/$d/Dockerfile.${BALENA_ARCH}" -a
-      fi
+      uncomment_blocks "$PROJECT_ROOT/docker-compose.${BALENA_ARCH}" -c -k
+      uncomment_blocks "$PROJECT_ROOT/$d/Dockerfile.${BALENA_ARCH}" -c -k
+      comment_blocks "$PROJECT_ROOT/docker-compose.${BALENA_ARCH}" -b
+      comment_blocks "$PROJECT_ROOT/$d/Dockerfile.${BALENA_ARCH}" -b
     fi
 
     if [ "$(cd "$PROJECT_ROOT/$d" && pwd)" != "$(pwd)" ]; then
