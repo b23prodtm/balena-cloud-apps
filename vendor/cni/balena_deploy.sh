@@ -595,7 +595,7 @@ run_target() {
       slogger -st docker "Allow cross-build (buildx)"
       native_compose_file_set
       cross_build_start
-      run_cmd ./build.${BALENA_ARCH}.sh
+      run_cmd "./build.${BALENA_ARCH}.sh"
       ;;
     2|--balena)
       slogger -st docker "Disable cross-build (buildx off)"
