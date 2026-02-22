@@ -3,5 +3,5 @@ services:
   testsvc:
     docker:
       context: balena-storage
-      dockerfile: Dockerfile.armhf
-    image: betothreeprod/raspberrypi3
+      dockerfile: Dockerfile.x86_64
+    image: betothreeprod/intel-nuc

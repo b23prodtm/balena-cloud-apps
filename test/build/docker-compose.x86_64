@@ -2,6 +2,6 @@ version: '2'
 services:
   testsvc:
     docker:
-      context: submodule
+      context: balena-storage
       dockerfile: Dockerfile.x86_64
     image: betothreeprod/intel-nuc
