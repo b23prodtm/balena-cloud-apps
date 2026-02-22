@@ -1,0 +1,5 @@
+## YAML Template.
+build-secrets:
+  global:
+    - source: secret_master_password
+      dest: master_password
