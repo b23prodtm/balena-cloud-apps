@@ -1,0 +1,13 @@
+M	test/build-test.sh
+M	vendor/cni/balena_deploy.sh
+M	vendor/cni/git_fix_issue.sh
+M	vendor/cni/git_fix_issue_close.sh
+M	test/build-test.sh
+M	vendor/cni/balena_deploy.sh
+M	vendor/cni/git_fix_issue.sh
+M	vendor/cni/git_fix_issue_close.sh
+M	test/build-test.sh
+M	vendor/cni/balena_deploy.sh
+M	vendor/cni/git_fix_issue.sh
+M	vendor/cni/git_fix_issue_close.sh
+M	vendor/cni/update_templates.sh

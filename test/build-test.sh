@@ -16,30 +16,24 @@ function test_deploy() {
   args=( "$testd" --no-ssh "3" --nobuild --exit )
   # shellcheck disable=SC1090
   bash -c "$vendord/balena_deploy.sh ${args[*]}" || true
-  grep -q "intel-nuc" < "$testd/submodule/Dockerfile.x86_64"
+  grep -q "intel-nuc" < "$testd/balena-storage/Dockerfile.x86_64"
 }
 function test_deploy_2() {
   # aarch64
   args=( "$testd" "arm64" --nobuild --exit )
   # shellcheck disable=SC1090
   bash -c "$vendord/balena_deploy.sh ${args[*]}" || true
-  grep -q "generic-aarch64" < "$testd/submodule/Dockerfile.aarch64"
+  grep -q "generic-aarch64" < "$testd/balena-storage/Dockerfile.aarch64"
 }
 function test_deploy_3() {
   # armhf
   args=( "$testd" "1" --nobuild --exit )
   # shellcheck disable=SC1090
   bash -c "$vendord/balena_deploy.sh ${args[*]}" || true
-  grep -q "raspberrypi3" < "$testd/submodule/Dockerfile.armhf"
-}
-function test_docker_3() {
-  args=( "${testd}/submodule" "betothreeprod/raspberrypi3:latest" "armhf" )
-  # shellcheck disable=SC1090
-  bash -c "$vendord/docker_build.sh ${args[*]}" || true
-  docker image ls -q "${args[2]}*"
+  grep -q "raspberrypi3" < "$testd/balena-storage/Dockerfile.armhf"
 }
 function test_docker() {
-  args=( "${testd}/deployment/images/dind-php7" "betothreeprod/dind-php7:latest" "armhf")
+  args=( "${testd}/balena-storage" "betothreeprod/raspberrypi3:latest" "armhf" )
   # shellcheck disable=SC1090
   bash -c "$vendord/docker_build.sh ${args[*]}" || true
   docker image ls -q "${args[2]}*"
@@ -72,8 +66,6 @@ results+=( "$?" )
 test_deploy_3
 results+=( "$?" )
 #test_docker
-#results+=( "$?" )
-#test_docker_3
 #results+=( "$?" )
 #test_git_fix
 #results+=( "$?" )

@@ -10,7 +10,6 @@ set -Eeuo pipefail
 SCRIPT_NAME=${0##*/}
 DRY_RUN=0
 USE_SSH=1
-LOG=""
 PROJECT_ROOT=""
 ARCH=""
 BALENA_ARCH=""
@@ -215,7 +214,7 @@ select_arch() {
     exit 1
   fi
 
-  run_cmd ln -vsf "$PROJECT_ROOT/${BALENA_ARCH}.env" "$PROJECT_ROOT/.env" >>"$LOG" 2>&1
+  run_cmd ln -vsf "$PROJECT_ROOT/${BALENA_ARCH}.env" "$PROJECT_ROOT/.env"
   # shellcheck disable=SC1090
   . "$PROJECT_ROOT/.env"
   # shellcheck disable=SC1090
@@ -230,8 +229,8 @@ get_flags_array() {
   local -n _out=$1
   _out=()
   # shellcheck disable=SC2154
-  if [ "${#BALENA_PROJETS_FLAGS[@]:-0}" -gt 0 ]; then
-    log_daemon_msg "Found ${#BALENA_PROJECTS_FLAGS[@]} flags in BALENA_PROJECTS_FLAGS" >>"$LOG"
+  if [ "${#BALENA_PROJECTS_FLAGS[@]}" -gt 0 ]; then
+    log_daemon_msg "Found ${#BALENA_PROJECTS_FLAGS[@]} flags in BALENA_PROJECTS_FLAGS"
     # shellcheck disable=SC2154,SC2034
     _out=("${BALENA_PROJECTS_FLAGS[@]}")
   fi
@@ -245,8 +244,8 @@ get_projects_array() {
   local -n _out=$1
   _out=(".")
   # shellcheck disable=SC2154
-  if [ "${#BALENA_PROJECTS[@]:-0}" -gt 0 ]; then
-    log_daemon_msg "Found ${#BALENA_PROJECTS[@]} projects in BALENA_PROJECTS" >>"$LOG"
+  if [ "${#BALENA_PROJECTS[@]}" -gt 0 ]; then
+    log_daemon_msg "Found ${#BALENA_PROJECTS[@]} projects in BALENA_PROJECTS"
     # shellcheck disable=SC2154,SC2034
     _out=("${BALENA_PROJECTS[@]}")
   fi
@@ -295,10 +294,14 @@ set_arch_in_files() {
 # Marker setup
 #######################################
 set_markers() {
-  export MARK_BEGIN=${MARK_BEGIN:-"RUN [^a-z]*cross-build-start[^a-z]*"}
-  export MARK_END=${MARK_END:-"RUN [^a-z]*cross-build-end[^a-z]*"}
-  export ARM_BEGIN="### ARM BEGIN"
-  export ARM_END="### ARM END"
+  export MARK_BEGIN="RUN [^a-z]*cross-build-start[^a-z]*"
+  export MARK_END="RUN [^a-z]*cross-build-end[^a-z]*"
+  export BALENA_BEGIN="### BALENA BEGIN"
+  export BALENA_END="### BALENA END"
+  export MOUNT_BEGIN="RUN [^a-z]--mount.*"
+  export MOUNT_END="[^a-z]--mount.*"
+  export BUILDKIT_BEGIN="### BUILDKIT BEGIN"
+  export BUILDKIT_END="### BUILDKIT END"
 }
 
 #######################################
@@ -311,15 +314,23 @@ comment_blocks() {
   fi
   local file=$1
   if [ "$#" -eq 1 ]; then
-    comment_blocks "$file" -a -c
+    comment_blocks "$file" -b -c -k
     return
   fi
 
   : >"${file}.sed"
   while [ "$#" -gt 1 ]; do
     case $2 in
-      -a|--arm)
-        printf "%s\n" "/${ARM_BEGIN}/,/${ARM_END}/s/^[# ]*(.*)/# \\1/g" >>"${file}.sed"
+      -k|--buildkit)
+        printf "%s\n" "/${BUILDKIT_BEGIN}/,/${BUILDKIT_END}/s/^[# ]*(.*)/# \\1/g" >>"${file}.sed"
+        local sed_rules=(
+          "s/[# ]*(${MOUNT_BEGIN})/# \\1/g"
+          "s/[# ]*(${MOUNT_END})/# \\1/g"
+        )
+        printf "%s\n" "${sed_rules[@]}" >>"${file}.sed"
+        ;;
+      -b|--balena)
+        printf "%s\n" "/${BALENA_BEGIN}/,/${BALENA_END}/s/^[# ]*(.*)/# \\1/g" >>"${file}.sed"
         ;;
       -c|--cross)
         local sed_rules=(
@@ -332,7 +343,7 @@ comment_blocks() {
     shift
   done
 
-  run_cmd sed -i.x.old -E -f "${file}.sed" "$file" >>"$LOG" 2>&1
+  run_cmd sed -i.x.old -E -f "${file}.sed" "$file"
 }
 
 #######################################
@@ -345,15 +356,23 @@ uncomment_blocks() {
   fi
   local file=$1
   if [ "$#" -eq 1 ]; then
-    uncomment_blocks "$file" -a -c
+    uncomment_blocks "$file" -b -c -k
     return
   fi
 
   : >"${file}.sed"
   while [ "$#" -gt 1 ]; do
     case $2 in
-      -a|--arm)
-        printf "%s\n" "/${ARM_BEGIN}/,/${ARM_END}/s/^(# )+(.*)/\\2/g" >>"${file}.sed"
+      -k|--buildkit)
+        printf "%s\n" "/${BUILDKIT_BEGIN}/,/${BUILDKIT_END}/s/^(# )+(.*)/\\2/g" >>"${file}.sed"
+        local sed_rules=(
+          "s/(# )+(${MOUNT_BEGIN})/\\2/g"
+          "s/(# )+(${MOUNT_END})/\\2/g"
+        )
+        printf "%s\n" "${sed_rules[@]}" >>"${file}.sed"
+        ;;
+      -b|--balena)
+        printf "%s\n" "/${BALENA_BEGIN}/,/${BALENA_END}/s/^(# )+(.*)/\\2/g" >>"${file}.sed"
         ;;
       -c|--cross)
         local sed_rules=(
@@ -377,7 +396,7 @@ cross_build_start() {
   if [ "$#" -gt 0 ]; then
     case $1 in
       -d*)
-        log_progress_msg "$MARK_END" >>"$LOG"
+        log_progress_msg "Disabled Cross-build"
         crossbuild=0
         ;;
       *)
@@ -386,7 +405,7 @@ cross_build_start() {
         ;;
     esac
   else
-    log_progress_msg "$MARK_BEGIN" >>"$LOG"
+    log_progress_msg "Enabled Cross-build"
   fi
 
   local -a projects=()
@@ -394,31 +413,17 @@ cross_build_start() {
 
   local d
   for d in "${projects[@]}"; do
-    run_cmd ln -vsf "$PROJECT_ROOT/${BALENA_ARCH}.env" "$PROJECT_ROOT/$d/.env" >>"$LOG" 2>&1
-    if [ "$(cd "$PROJECT_ROOT/$d" && pwd)" != "$(pwd)" ]; then
-      run_cmd ln -vsf "$PROJECT_ROOT/common.env" "$PROJECT_ROOT/$d/common.env" >>"$LOG" 2>&1
-    fi
-
-    set_arch_in_files "$PROJECT_ROOT/$d/Dockerfile.template" "$PROJECT_ROOT/$d/Dockerfile.${BALENA_ARCH}"
-    set_arch_in_files "$PROJECT_ROOT/$d/build.template" "$PROJECT_ROOT/$d/build.${BALENA_ARCH}.sh"
 
     if [ "$crossbuild" -eq 0 ]; then
-      if [ "$BALENA_ARCH" != "x86_64" ]; then
-        comment_blocks "$PROJECT_ROOT/$d/Dockerfile.${BALENA_ARCH}" -c
-        uncomment_blocks "$PROJECT_ROOT/$d/Dockerfile.${BALENA_ARCH}" -a
-        uncomment_blocks "$PROJECT_ROOT/docker-compose.${BALENA_ARCH}" -a
-      else
-        comment_blocks "$PROJECT_ROOT/$d/Dockerfile.${BALENA_ARCH}"
-        comment_blocks "$PROJECT_ROOT/docker-compose.${BALENA_ARCH}"
-      fi
+      comment_blocks "$PROJECT_ROOT/$d/Dockerfile.${BALENA_ARCH}" -c -k
+      comment_blocks "$PROJECT_ROOT/docker-compose.${BALENA_ARCH}" -c -k
+      uncomment_blocks "$PROJECT_ROOT/$d/Dockerfile.${BALENA_ARCH}" -b
+      uncomment_blocks "$PROJECT_ROOT/docker-compose.${BALENA_ARCH}" -b
     else
-      if [ "$BALENA_ARCH" != "x86_64" ]; then
-        uncomment_blocks "$PROJECT_ROOT/docker-compose.${BALENA_ARCH}"
-        uncomment_blocks "$PROJECT_ROOT/$d/Dockerfile.${BALENA_ARCH}"
-      else
-        comment_blocks "$PROJECT_ROOT/docker-compose.${BALENA_ARCH}"
-        comment_blocks "$PROJECT_ROOT/$d/Dockerfile.${BALENA_ARCH}"
-      fi
+      uncomment_blocks "$PROJECT_ROOT/docker-compose.${BALENA_ARCH}" -c -k
+      uncomment_blocks "$PROJECT_ROOT/$d/Dockerfile.${BALENA_ARCH}" -c -k
+      comment_blocks "$PROJECT_ROOT/docker-compose.${BALENA_ARCH}" -b
+      comment_blocks "$PROJECT_ROOT/$d/Dockerfile.${BALENA_ARCH}" -b
     fi
 
     if [ "$(cd "$PROJECT_ROOT/$d" && pwd)" != "$(pwd)" ]; then
@@ -442,7 +447,7 @@ git_commit() {
     git config --local user.email "$githubuserid"
     git config --local user.name "${githubuserid%@*}"
   fi
-  run_cmd git commit -a -m "$msg" >>"$LOG" 2>&1 || true
+  run_cmd git commit -a -m "$msg" || true
 }
 
 #######################################
@@ -456,6 +461,19 @@ native_compose_file_set() {
   fi
   set_arch_in_files "$PROJECT_ROOT/docker-compose.template" "$PROJECT_ROOT/docker-compose.$arch"
   run_cmd cp -vf "$PROJECT_ROOT/docker-compose.$arch" "$PROJECT_ROOT/docker-compose.yml"
+  local -a projects=()
+  get_projects_array projects
+
+  local d
+  for d in "${projects[@]}"; do
+    run_cmd ln -vsf "$PROJECT_ROOT/${BALENA_ARCH}.env" "$PROJECT_ROOT/$d/.env"
+    if [ "$(cd "$PROJECT_ROOT/$d" && pwd)" != "$(pwd)" ]; then
+      run_cmd ln -vsf "$PROJECT_ROOT/common.env" "$PROJECT_ROOT/$d/common.env"
+    fi
+
+    set_arch_in_files "$PROJECT_ROOT/$d/Dockerfile.template" "$PROJECT_ROOT/$d/Dockerfile.${BALENA_ARCH}"
+    set_arch_in_files "$PROJECT_ROOT/$d/build.template" "$PROJECT_ROOT/$d/build.${BALENA_ARCH}.sh"
+  done
 }
 
 #######################################
@@ -520,11 +538,9 @@ setup_ssh_agent() {
 
   # Add keys, ignore failures
   # shellcheck disable=SC2086
-  for pkey in "$HOME"/.ssh/*id_rsa; do
-    ssh-add "$pkey" >> "$LOG" 2>&1
-  done
-  for pkey in "$HOME"/.ssh/*id_ed25519; do
-    ssh-add "$pkey" >>"$LOG" 2>&1
+  mapfile -t pkeys < <(find "$HOME/.ssh/" -type f | xargs grep -l "BEGIN.*PRIVATE KEY" )
+  for pkey in "${pkeys[@]}"; do
+    ssh-add "$pkey"
   done
 }
 
@@ -565,9 +581,9 @@ run_target() {
 
   case $target in
     1|--local)
-      slogger -st docker "Allow cross-build"
-      cross_build_start
+      slogger -st docker "Allow cross-build (buildx)"
       native_compose_file_set
+      cross_build_start
       if command -v balena >/dev/null 2>&1; then
         # shellcheck disable=SC2046
         local devices
@@ -580,17 +596,14 @@ run_target() {
       fi
       ;;
     4|--docker)
-      slogger -st docker "Allow cross-build"
+      slogger -st docker "Allow cross-build (buildx)"
+      native_compose_file_set
       cross_build_start
-      local file="docker-compose.${BALENA_ARCH}"
-      if [ -f "$file" ]; then
-        run_cmd docker-compose -f "$file" --host "${DOCKER_HOST:-}" build >>"$LOG" 2>&1
-      else
-        run_cmd docker build -f "Dockerfile.${BALENA_ARCH}" . >>"$LOG" 2>&1
-      fi
+      run_cmd "./build.${BALENA_ARCH}.sh"
       ;;
     2|--balena)
-      slogger -st docker "Deny cross-build"
+      slogger -st docker "Disable cross-build (buildx off)"
+      native_compose_file_set
       cross_build_start -d
       native_compose_file_set
       if command -v balena >/dev/null 2>&1; then
@@ -605,22 +618,22 @@ run_target() {
       fi
       ;;
     3|--nobuild)
-      slogger -st docker "Allow cross-build"
-      cross_build_start
+      slogger -st docker "Allow cross-build (buildx)"
       native_compose_file_set
+      cross_build_start
       ;;
     5|--push)
       run_cmd git push --recurse-submodules=on-demand
       ;;
     6|--build-deps)
-      slogger -st docker "Allow cross-build"
-      cross_build_start
+      slogger -st docker "Allow cross-build (buildx)"
       native_compose_file_set
+      cross_build_start
       deploy_deps
       ;;
     0|--exit)
-      log_daemon_msg "deploy's exiting..." >>"$LOG"
-      return 0
+      log_daemon_msg "deploy's exiting..."
+      exit 0
       ;;
     *)
       log_warning_msg "Unknown target: $target"
@@ -672,8 +685,6 @@ main_loop() {
       args=("${args[@]:1}")
     fi
   done
-
-  check_log "$LOG"
 }
 
 #######################################
