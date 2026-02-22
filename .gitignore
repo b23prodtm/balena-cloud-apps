@@ -3,7 +3,7 @@
 *.x86
 *.sed
 .env
-/test/build/**
+/test/build/
 !/test/build/*.template
 !/test/build/.balena/**
 !/test/build/docker-bake.hcl
