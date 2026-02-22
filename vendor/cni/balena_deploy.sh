@@ -633,7 +633,7 @@ run_target() {
       ;;
     0|--exit)
       log_daemon_msg "deploy's exiting..."
-      return 0
+      exit 0
       ;;
     *)
       log_warning_msg "Unknown target: $target"
