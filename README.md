@@ -77,13 +77,13 @@ In BASH scripts, use arguments:
 # Updating and managing npm version
 Follow general guidelines in the documention about [versioning this project on npm](https://docs.npmjs.com/packages-and-modules/updating-and-managing-your-published-packages)
 
-Basically, commit all your changes and bump to the next version, then push tags:
+Basically while on PR, commit all your changes and bump to the next version patch:
 
-    # version string without the leading "v."
-    npm version "0.0.1"
-    git push --tags
+    # Usage: npm version patch|minor|major|string without the leading "v.", e.g. npm version "1.0.1"
+    npm version patch
+    git push --tags && git push
 
-The continuous integration system will detect the new version tag and deploy to NPMJS if all build steps succeed.
+As of `.circleci/config.yml`, by merging the master banch, Github will detect the new version tag and CI will proceed with deploy: task.
 
 # CLI functions
 All endpoints in command line shell scripts are registered in package.json. When balena-cloud-apps installs itself, the functions become available to environment PATH.

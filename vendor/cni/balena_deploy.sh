@@ -295,8 +295,8 @@ set_arch_in_files() {
 # Marker setup
 #######################################
 set_markers() {
-  export MARK_BEGIN="RUN [^a-z]*cross-build-start[^a-z]*"
-  export MARK_END="RUN [^a-z]*cross-build-end[^a-z]*"
+  export MARK_BEGIN=${MARK_BEGIN:-"RUN [^a-z]*cross-build-start[^a-z]*"}
+  export MARK_END=${MARK_END:-"RUN [^a-z]*cross-build-end[^a-z]*"}
   export ARM_BEGIN="### ARM BEGIN"
   export ARM_END="### ARM END"
 }
@@ -319,7 +319,7 @@ comment_blocks() {
   while [ "$#" -gt 1 ]; do
     case $2 in
       -a|--arm)
-        echo "/${ARM_BEGIN}/,/${ARM_END}/s/^[# ]*(.*)/# \\1/g" >>"${file}.sed"
+        printf "%s\n" "/${ARM_BEGIN}/,/${ARM_END}/s/^[# ]*(.*)/# \\1/g" >>"${file}.sed"
         ;;
       -c|--cross)
         local sed_rules=(
@@ -353,7 +353,7 @@ uncomment_blocks() {
   while [ "$#" -gt 1 ]; do
     case $2 in
       -a|--arm)
-        echo "/${ARM_BEGIN}/,/${ARM_END}/s/^(# )+(.*)/\\2/g" >>"${file}.sed"
+        printf "%s\n" "/${ARM_BEGIN}/,/${ARM_END}/s/^(# )+(.*)/\\2/g" >>"${file}.sed"
         ;;
       -c|--cross)
         local sed_rules=(
