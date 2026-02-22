@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -eu
+TOPDIR="$(cd "$(dirname \
+"$(dirname "${BASH_SOURCE[0]}")")" && pwd)"
+ln -s "${TOPDIR}/%%BALENA_ARCH%%.env" %%BALENA_ARCH%%.env
+balena_deploy "${TOPDIR}" %%BALENA_ARCH%% 3 0
+docker buildx bake -f "${TOPDIR}/docker-bake.hcl" balena-storage \
+  --set "*.platform=%%PLATFORM%%" --push
