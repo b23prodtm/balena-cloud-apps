@@ -4,6 +4,9 @@
 *.sed
 .env
 test/build/**
+!test/build/*.template
+!test/build/.balena/**
+!/test/build/docker-bake.hcl
 node_modules
 build.log
 balena-cloud-apps
