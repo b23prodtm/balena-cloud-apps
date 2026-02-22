@@ -295,10 +295,14 @@ set_arch_in_files() {
 # Marker setup
 #######################################
 set_markers() {
-  export MARK_BEGIN=${MARK_BEGIN:-"RUN [^a-z]*cross-build-start[^a-z]*"}
-  export MARK_END=${MARK_END:-"RUN [^a-z]*cross-build-end[^a-z]*"}
+  export MARK_BEGIN="RUN [^a-z]*cross-build-start[^a-z]*"
+  export MARK_END="RUN [^a-z]*cross-build-end[^a-z]*"
   export ARM_BEGIN="### ARM BEGIN"
   export ARM_END="### ARM END"
+  export MOUNT_BEGIN="RUN [^a-z]*--mount.*"
+  export MOUNT_END="[^a-z]*--mount.*"
+  export BUILDKIT_BEGIN="### BUILDKIT BEGIN"
+  export BUILDKIT_END="### BUILDKIT END"
 }
 
 #######################################
@@ -311,13 +315,21 @@ comment_blocks() {
   fi
   local file=$1
   if [ "$#" -eq 1 ]; then
-    comment_blocks "$file" -a -c
+    comment_blocks "$file" -a -c -b
     return
   fi
 
   : >"${file}.sed"
   while [ "$#" -gt 1 ]; do
     case $2 in
+      -b|--buildkit)
+        printf "%s\n" "/${BUILDKIT_BEGIN}/,/${BUILDKIT_END}/s/^[# ]*(.*)/# \\1/g" >>"${file}.sed"
+        local sed_rules=(
+          "s/[# ]*(${MOUNT_BEGIN})/# \\1/g"
+          "s/[# ]*(${MOUNT_END})/# \\1/g"
+        )
+        printf "%s\n" "${sed_rules[@]}" >>"${file}.sed"
+        ;;
       -a|--arm)
         printf "%s\n" "/${ARM_BEGIN}/,/${ARM_END}/s/^[# ]*(.*)/# \\1/g" >>"${file}.sed"
         ;;
@@ -345,13 +357,21 @@ uncomment_blocks() {
   fi
   local file=$1
   if [ "$#" -eq 1 ]; then
-    uncomment_blocks "$file" -a -c
+    uncomment_blocks "$file" -a -c -b
     return
   fi
 
   : >"${file}.sed"
   while [ "$#" -gt 1 ]; do
     case $2 in
+      -b|--buildkit)
+        printf "%s\n" "/${BUILDKIT_BEGIN}/,/${BUILDKIT_END}/s/^(# )+(.*)/\\2/g" >>"${file}.sed"
+        local sed_rules=(
+          "s/(# )+(${MOUNT_BEGIN})/\\2/g"
+          "s/(# )+(${MOUNT_END})/\\2/g"
+        )
+        printf "%s\n" "${sed_rules[@]}" >>"${file}.sed"
+        ;;
       -a|--arm)
         printf "%s\n" "/${ARM_BEGIN}/,/${ARM_END}/s/^(# )+(.*)/\\2/g" >>"${file}.sed"
         ;;
@@ -403,21 +423,24 @@ cross_build_start() {
     set_arch_in_files "$PROJECT_ROOT/$d/build.template" "$PROJECT_ROOT/$d/build.${BALENA_ARCH}.sh"
 
     if [ "$crossbuild" -eq 0 ]; then
+        comment_blocks "$PROJECT_ROOT/$d/Dockerfile.${BALENA_ARCH}" -c -b
+        comment_blocks "$PROJECT_ROOT/docker-compose.${BALENA_ARCH}" -c -b
       if [ "$BALENA_ARCH" != "x86_64" ]; then
-        comment_blocks "$PROJECT_ROOT/$d/Dockerfile.${BALENA_ARCH}" -c
         uncomment_blocks "$PROJECT_ROOT/$d/Dockerfile.${BALENA_ARCH}" -a
         uncomment_blocks "$PROJECT_ROOT/docker-compose.${BALENA_ARCH}" -a
       else
-        comment_blocks "$PROJECT_ROOT/$d/Dockerfile.${BALENA_ARCH}"
-        comment_blocks "$PROJECT_ROOT/docker-compose.${BALENA_ARCH}"
+        comment_blocks "$PROJECT_ROOT/$d/Dockerfile.${BALENA_ARCH}" -a
+        comment_blocks "$PROJECT_ROOT/docker-compose.${BALENA_ARCH}" -a
       fi
     else
+        uncomment_blocks "$PROJECT_ROOT/docker-compose.${BALENA_ARCH}" -c -b
+        uncomment_blocks "$PROJECT_ROOT/$d/Dockerfile.${BALENA_ARCH}" -c -b
       if [ "$BALENA_ARCH" != "x86_64" ]; then
-        uncomment_blocks "$PROJECT_ROOT/docker-compose.${BALENA_ARCH}"
-        uncomment_blocks "$PROJECT_ROOT/$d/Dockerfile.${BALENA_ARCH}"
+        uncomment_blocks "$PROJECT_ROOT/docker-compose.${BALENA_ARCH}" -a
+        uncomment_blocks "$PROJECT_ROOT/$d/Dockerfile.${BALENA_ARCH}" -a
       else
-        comment_blocks "$PROJECT_ROOT/docker-compose.${BALENA_ARCH}"
-        comment_blocks "$PROJECT_ROOT/$d/Dockerfile.${BALENA_ARCH}"
+        comment_blocks "$PROJECT_ROOT/docker-compose.${BALENA_ARCH}" -a
+        comment_blocks "$PROJECT_ROOT/$d/Dockerfile.${BALENA_ARCH}" -a
       fi
     fi
 
@@ -565,7 +588,7 @@ run_target() {
 
   case $target in
     1|--local)
-      slogger -st docker "Allow cross-build"
+      slogger -st docker "Allow cross-build (buildx)"
       cross_build_start
       native_compose_file_set
       if command -v balena >/dev/null 2>&1; then
@@ -580,7 +603,7 @@ run_target() {
       fi
       ;;
     4|--docker)
-      slogger -st docker "Allow cross-build"
+      slogger -st docker "Allow cross-build (buildx)"
       cross_build_start
       local file="docker-compose.${BALENA_ARCH}"
       if [ -f "$file" ]; then
@@ -590,7 +613,7 @@ run_target() {
       fi
       ;;
     2|--balena)
-      slogger -st docker "Deny cross-build"
+      slogger -st docker "Disable cross-build (buildx off)"
       cross_build_start -d
       native_compose_file_set
       if command -v balena >/dev/null 2>&1; then
@@ -605,7 +628,7 @@ run_target() {
       fi
       ;;
     3|--nobuild)
-      slogger -st docker "Allow cross-build"
+      slogger -st docker "Allow cross-build (buildx)"
       cross_build_start
       native_compose_file_set
       ;;
@@ -613,7 +636,7 @@ run_target() {
       run_cmd git push --recurse-submodules=on-demand
       ;;
     6|--build-deps)
-      slogger -st docker "Allow cross-build"
+      slogger -st docker "Allow cross-build (buildx)"
       cross_build_start
       native_compose_file_set
       deploy_deps
