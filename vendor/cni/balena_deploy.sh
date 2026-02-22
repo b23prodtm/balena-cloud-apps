@@ -299,8 +299,6 @@ set_markers() {
   export MARK_END="RUN [^a-z]*cross-build-end[^a-z]*"
   export BALENA_BEGIN="### BALENA BEGIN"
   export BALENA_END="### BALENA END"
-  export MOUNT_BEGIN="RUN [^a-z]*--mount.*"
-  export MOUNT_END="[^a-z]*--mount.*"
   export BUILDKIT_BEGIN="### BUILDKIT BEGIN"
   export BUILDKIT_END="### BUILDKIT END"
 }

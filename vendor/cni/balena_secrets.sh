@@ -3,8 +3,23 @@
 set -eu
 TOPDIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
+# Usage
+usage() {
+  printf "\%sn" "Usage: ${BASH_SOURCE[0]} <dir> [--mount|-m] [-r] [-w] [-x] [-d <folder>]"
+  exit 0
+}
+
+cd "$1" && shift || usage
+
 # Define the directory containing the secrets
-SECRETS_DIR="${TOPDIR}/.balena/secrets"
+SECRETS_DIR=".balena/secrets"
+
+# Check if the secrets directory exists
+if [[ ! -d "$SECRETS_DIR" ]]; then
+    echo "Secrets directory not found!"
+    exit 1
+fi
+
 
 # Array of secret files
 mapfile -t secrets < <(ls "$SECRETS_DIR")
@@ -50,11 +65,12 @@ read_secrets() {
     -[rR]*);;
     -[xX]*)
       exp="echo "
-      sep=" &&"
       ;;
     -[eE]*)
       exp="export "
-      sep=" &&"
+      ;;
+    -[hH]*)
+      usage
       ;;
     *)
       printf "%s\n" "$0 Wrong Argument: $1"
@@ -70,25 +86,16 @@ read_secrets() {
   printf "%s\n" "### BALENA END"
   for secret in "${secrets[@]}"; do
     secret=${secret#*secret_}
-    printf "%s%s=\$(cat %s)%s \\\\\n" "$exp" "${secret^^}" "/run/secrets/${secret}" "$sep"
+    printf "%s%s%s=\$(cat %s) \\\\\n" "$sep" "$exp" "${secret^^}" "/run/secrets/${secret}"
+    sep="&& "
   done
 }
-
-# Usage
-usage() {
-  printf "\%sn" "Usage: ${BASH_SOURCE[0]} [--mount|-m] [-r] [-w] [-x] [-d <folder>]"
-}
-# Check if the secrets directory exists
-if [[ ! -d "$SECRETS_DIR" ]]; then
-    echo "Secrets directory not found!"
-    exit 1
-fi
 
 # prints secrets VARIABLES="$(cat /run/secret/***)"
 mount=""
 while [ "$#" -gt 0 ]; do case "$1" in
   -[xXeERr]*)
-    read_secrets $*
+    read_secrets "$@"
     exit 0
     ;;
   -[wW]*)
