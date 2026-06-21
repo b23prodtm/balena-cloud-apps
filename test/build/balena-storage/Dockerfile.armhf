@@ -14,10 +14,9 @@ RUN install_packages findmnt util-linux grep \
 WORKDIR /usr/src
 COPY scripts scripts
 RUN chmod +x scripts/*
-RUN --mount=type=secret,id=master_password \
-# BALENA BEGIN
-# RUN \
-# BALENA END
+# BEGIN DOCKER_BUILDKIT
+    --mount=type=secret,id=master_password
+    # END DOCKER_BUILDKIT
 export MASTER_PASSWORD=$(cat /run/secrets/master_password)
 
 # Change your CMD as needed

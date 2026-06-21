@@ -73,8 +73,8 @@ __log() {
 
 log_daemon_msg()   { __log info  "$*"; }
 log_progress_msg() { __log info  "$*"; }
-log_success_msg()  { __log info  "$*"; }
-log_failure_msg()  { __log error "$*"; }
+log_success_msg()  { __log info  "$*"; echo "[SUCCESS] $*"; }
+log_failure_msg()  { __log error "$*"; echo "[FAILURE] $*"; }
 
 # Debug logging
 log_debug() { __log debug "$*"; }

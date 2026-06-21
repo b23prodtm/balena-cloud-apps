@@ -613,7 +613,9 @@ run_target() {
         balena_push_select "${arr[@]}" || true
       else
         log_warning_msg "Balena Cloud not installed. Using git push."
-        run_cmd git push -uf balena || true
+        current_branch=$(git branch --show-current)
+        log_daemon_msg "Current branch: $current_branch"
+        run_cmd git push -uf balena "$current_branch:master" || true
       fi
       ;;
     3|--nobuild)
