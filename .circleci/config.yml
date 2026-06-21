@@ -54,7 +54,9 @@ jobs:
             git config --global user.email "b23prodtm@users.sourceforge.net"
             git config --global user.name "B R T"
              npm test
-
+      - run:
+          name: Build
+          command: npm run build --if-present
       - save_cache:
           paths:
             - node_modules
@@ -85,8 +87,8 @@ jobs:
       - run:
           name: Publish package
           command: |
-            npm ci
-            npm publish
+            export NPM_ID_TOKEN=$(circleci run oidc get --claims '{"aud": "npm:registry.npmjs.org"}')
+            npm publish --access public
       - run:
           name: Update deployment status to running
           command: circleci run release update "${CIRCLE_JOB}" --status=RUNNING
@@ -110,6 +112,7 @@ workflows:
       - deploy:
           context:
             - Info-b23prodtm
+            - trusted-publishing-guard
           requires:
             - test
           filters:
