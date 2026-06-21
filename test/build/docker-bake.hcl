@@ -31,6 +31,6 @@ target "testsvc" {
     PGID = "1000"
   }
   secret = [
-    "id=master_password,src=.balena/secrets/secret_master_password"
+    "id=master_password,src=.balena/secrets/master_password"
   ]
 }

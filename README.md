@@ -1,89 +1,117 @@
-# balena-cloud-apps
-[![balena-cloud-apps](https://circleci.com/gh/b23prodtm/balena-cloud-apps.svg?style=shield)](https://app.circleci.com/pipelines/github/b23prodtm/balena-cloud-apps)
- This is a free NodeJS script to package the containers native interface BalenaOS for the Raspberry Pi and similar platforms.
-## The open source [Balena-CLI](https://github.com/balena-io/balena-cli) is required, first install Balena-CLI on the host that's sending command lines.
 
-Within an open source application, like  [balena-sound](https://github.com/balenalabs/balena-sound), [wifi-repeater](https://github.com/balenalabs-incubator/wifi-repeater), install this module:
-```Shell
+# Balena Cloud Apps
+[![balena-cloud-apps](https://circleci.com/gh/b23prodtm/balena-cloud-apps.svg?style=shield)](https://app.circleci.com/pipelines/github/b23prodtm/balena-cloud-apps)
+
+**Description**
+Outil open-source en NodeJS pour faciliter le paramétrage et le déploiement de projets sur **Balena Cloud** (Raspberry Pi, Intel NUC, etc.). Ce module permet de packager des conteneurs pour des applications comme [balena-sound](https://github.com/balenalabs/balena-sound) ou [wifi-repeater](https://github.com/balenalabs-incubator/wifi-repeater).
+
+---
+
+## 📥 Installation
+
+### Prérequis
+- **[Balena-CLI](https://github.com/balena-io/balena-cli)** doit être installé sur la machine hôte.
+
+### Installation du module
+Dans votre projet, exécutez :
+```bash
 #!/usr/bin/env bash
 cd application
 printf "%s\n" "nodeLinker: node-modules" | tee -a .yarnrc.yml
 yarn add balena-cloud-apps
 ```
 
-### Template fields 
-(`BALENA_PROJECTS_FLAGS`) take variable names `%%templates_var%%` that are replaced by ther value in `<arch>.env`
-Make changes to the Dockerfile.template files.
+---
 
-Initialize .env and package.json:
+## ⚙️ Configuration du projet
 
-    post_install
+### 1. Variables de template
+Les fichiers `Dockerfile.template` utilisent des variables au format `%%templates_var%%`, remplacées par les valeurs définies dans les fichiers `<arch>.env` (ex: `armhf.env`, `aarch64.env`, `x86_64.env`).
 
-> It will scan for any Docker files in the sub-folders and reset package.json, `common.env` and `<arch>.env` files.
+### 2. Initialisation des fichiers
+Exécutez la commande suivante pour générer `package.json`, `common.env` et `<arch>.env` :
+```bash
+post_install
+```
+> ⚠️ **Note** : Cette commande analyse les sous-dossiers pour détecter les fichiers Docker et réinitialise les fichiers de configuration.
 
-### Configure template environment
+### 3. Configuration de l’environnement commun
+Éditez le fichier **`common.env`** pour définir :
+- Les chemins des projets Balena (`BALENA_PROJECTS`).
+- Les flags spécifiques (`BALENA_PROJECTS_FLAGS`).
 
-Complete common definitions (leading and trailing ( spaces ) when defining arrays !!):
-```common.env
+**Exemple :**
+```env
+# Chemins des projets Docker Compose
 BALENA_PROJECTS=( MY/PATH MY/RELATIVE/PATH )
 BALENA_PROJECTS_FLAGS=( BALENA_MACHINE_NAME MY_VARIABLE )
 ```
-Define architectures: 
-An ARM computer units like Raspberry PI use `armhf.env` (or `aarch64.env` if it's deployed on a 64 bits platform), desktop units are often `x86_64.env`:
-```x86_64.env
+
+### 4. Définir les architectures
+Créez un fichier par architecture (ex: `x86_64.env`) :
+```env
 BALENA_ARCH=x86_64
 BALENA_MACHINE_NAME=intel-nuc
 IMG_TAG=latest
-PRIMARY_HUB=docker-hub-balenalib-repo\\/container-servìce-image
+PRIMARY_HUB=docker-hub-repo/container-service-image
 ```
 
-# Test
-Run unit tests on local host or CI
+---
 
-    yarn test
+## 🔨 Construction et déploiement
 
-### Build dependencies
-Docker Image dependencies are required to validate test units. Theses dependencies include build images needed by Docker based environments:
-  - Docker and Balena Cloud platform (DockerHub, etc.)
-  - CircleCI, TravisCI, etc.
+### 1. Authentification
+Connectez-vous à Docker ou Balena :
+```bash
+docker login  # ou
+balena login
+```
 
-First login to Docker or Balena, if you already have an account or [create one](https://hub.docker.com).
+### 2. Construction des dépendances
+Utilisez la commande suivante pour construire les images Docker :
+```bash
+balena_deploy test/build/ 5
+```
+> ⚠️ **Choix de l’architecture** : Sélectionnez `ARM32`, `ARM64` ou `X86-64` (1, 2 ou 3).
+> Les images sont poussées vers votre dépôt Docker (`$DOCKER_USER/<image>`).
 
-    docker login or balena login
-    
-The folder `deployments` contains Dockerfile templates that maybe pulled from Docker.
+### 3. Déploiement
+- **Vers Balena Cloud** :
+  ```bash
+  balena_deploy .
+  ```
+- **En local** :
+  ```bash
+  docker_build . . <DOCKER_USER>/<IMAGE>:<TAG> <BALENA_ARCH>
+  ```
+- **Avec des arguments** :
+  ```bash
+  balena_deploy . x86_64 --nobuild --exit
+  balena_deploy . armhf --balena
+  ```
 
-    balena_deploy test/build/
+---
 
-Finally select the corresponding architecture `ARM32, ARM64 bits or X86-64 (choose 1, 2 or 3)` and choose to `build dependencies`
+## 🔄 Mise à jour du projet après modifications
 
-It takes a few minutes for the docker machine to pull, update local images and to push them to the repository. They take the name `$DOCKER_USER/<image>` and get a public URL at `https://hub.docker.com/r/$DOCKER_USER/<image>`
+1. **Testez les modifications** :
+   ```bash
+   yarn test
+   ```
+   > Exécutez les tests locaux ou en CI pour valider les changements.
 
-## Deploy
-Deploy to Docker or BalenaOS, easy, choose targets:
+2. **Incrémentez la version** :
+   ```bash
+   npm version patch  # ou minor/major
+   git push --tags && git push
+   ```
+   > ⚠️ **Bonnes pratiques** :
+   > - Validez toutes les modifications dans une PR.
+   > - Utilisez `npm version` pour gérer les versions (ex: `1.0.1`).
 
-    balena_deploy .
+3. **Déploiement automatique** :
+   > Après fusion dans `master`, GitHub détecte le nouveau tag et déclenche le déploiement via `.circleci/config.yml`.
 
-You can build locally:
-
-    docker_build . . <DOCKER_USER>/<IMAGE>:<TAG> <BALENA_ARCH>
-
-In BASH scripts, use arguments:
-
-    balena_deploy . x86_64 --nobuild --exit
-    balena_deploy . armhf --balena
-
-
-# Updating and managing npm version
-Follow general guidelines in the documention about [versioning this project on npm](https://docs.npmjs.com/packages-and-modules/updating-and-managing-your-published-packages)
-
-Basically while on PR, commit all your changes and bump to the next version patch:
-
-    # Usage: npm version patch|minor|major|string without the leading "v.", e.g. npm version "1.0.1"
-    npm version patch
-    git push --tags && git push
-
-As of `.circleci/config.yml`, by merging the master banch, Github will detect the new version tag and CI will proceed with deploy: task.
-
-# CLI functions
-All endpoints in command line shell scripts are registered in package.json. When balena-cloud-apps installs itself, the functions become available to environment PATH.
+---
+## 📜 Fonctions CLI
+Toutes les commandes sont enregistrées dans `package.json` et disponibles dans le `PATH` après installation.

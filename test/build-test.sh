@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 set -eu
 
+echo "Début du script build-test.sh"
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+echo "Répertoire du script : $script_dir"
 vendord="$script_dir/../vendor/cni"
 testd="$script_dir/build"
 
