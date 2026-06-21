@@ -75,7 +75,6 @@ jobs:
           command: |
             npm config set @b23prodtm:registry https://npm.pkg.github.com
             npm config set //npm.pkg.github.com/:_authToken=$gh_TOKEN
-            npm config set //registry.npmjs.org/:_authToken=$npm_TOKEN
       - run:
           name: Publish package
           command: |
@@ -91,6 +90,8 @@ workflows:
           requires:
             - shellcheck
       - deploy:
+          context:
+            - Info-b23prodtm
           requires:
             - test
           filters:
