@@ -12,10 +12,15 @@
 ### END INIT INFO
 
 set -eu
-if [ ! -f /etc/os-releases ] \
-|| [ "$(grep -q "ID=" < /etc/os-releases)" != "debian" ] \
-&& [ "$(grep -q "ID=" < /etc/os-releases)" != "ubuntu" ]; then
-    echo -e "This script only made for Debian and Ubuntu linux"
+# Support Debian/Ubuntu only
+if [ ! -f /etc/os-release ]; then
+    printf "%s\n" "This script only made for Debian and Ubuntu linux" >&2
+    exit 3
+fi
+# shellcheck disable=SC1091
+. /etc/os-release || true
+if [ "${ID:-}" != "debian" ] && [ "${ID:-}" != "ubuntu" ]; then
+    printf "%s\n" "This script only made for Debian and Ubuntu linux" >&2
     exit 3
 fi
 
@@ -26,9 +31,9 @@ DAEMON_SVC="/usr/lib/systemd/system/$SVC_NAME.service.d/"
 # shellcheck disable=SC1091
 . /lib/lsb/init-functions
 
-[ -f $DAEMON_CF ] || mkdir -p "$(dirname $DAEMON_CF)"
-[ -f $DAEMON_CF ] || touch "$DAEMON_CF"
-[ -d $DAEMON_SVC ] || mkdir -p "$DAEMON_SVC"
+[ -f "$DAEMON_CF" ] || mkdir -p "$(dirname "$DAEMON_CF")"
+[ -f "$DAEMON_CF" ] || touch "$DAEMON_CF"
+[ -d "$DAEMON_SVC" ] || mkdir -p "$DAEMON_SVC"
 
 banner=( "" "[services.d] $DAEMON_SVC" "" ); log_daemon_msg "%s\n" "${banner[@]}"
 

@@ -26,14 +26,18 @@ if [[ ! -d "$SECRETS_DIR" ]]; then
 fi
 
 
-# Array of secret files
-mapfile -t secrets < <(ls "$SECRETS_DIR")
+# Array of secret files (basenames only) without using ls
+secrets=()
+for _f in "$SECRETS_DIR"/*; do
+  [ -e "$_f" ] || continue
+  secrets+=("$(basename "$_f")")
+done
 
 # Function to display current secrets
 display_secrets() {
     echo "Current secrets:"
     for secret in "${secrets[@]}"; do
-        echo "$secret: $(cat "$SECRETS_DIR/$secret" | cut -c 1-3)****"
+        echo "$secret: $(cut -c 1-3 "$SECRETS_DIR/$secret")****"
     done
     echo
 }
