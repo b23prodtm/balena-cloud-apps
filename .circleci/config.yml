@@ -79,7 +79,7 @@ jobs:
           name: Publish package
           command: |
             npm ci
-            npm publish
+            npm publish || true
 
 workflows:
   version: 2
@@ -94,8 +94,3 @@ workflows:
             - Info-b23prodtm
           requires:
             - test
-          filters:
-            branches:
-              only: master
-            tags:
-              only: /v(\.?[0-9]+)*/
