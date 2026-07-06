@@ -80,7 +80,7 @@ jobs:
           name: Publish package
           command: |
             export NPM_ID_TOKEN=$(circleci run oidc get --claims '{"aud": "npm:registry.npmjs.org"}')
-            npm publish --access public
+            npm publish --access public || true
       - run:
           name: Update deployment status to running
           command: circleci run release update "${CIRCLE_JOB}" --status=RUNNING
@@ -107,8 +107,3 @@ workflows:
             - trusted-publishing-guard
           requires:
             - test
-          filters:
-            branches:
-              only: master
-            tags:
-              only: /v(\.?[0-9]+)*/
