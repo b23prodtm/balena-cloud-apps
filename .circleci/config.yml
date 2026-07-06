@@ -8,9 +8,6 @@ defaults: &defaults
   working_directory: ~/repo
   docker:
     - image: cimg/node:lts
-      auth:
-        username: $DOCKER_USER
-        password: $DOCKER_PASS
 
 jobs:
   shellcheck:
