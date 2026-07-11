@@ -3,7 +3,7 @@
 [ "$#" = 0 ] && printf "Usage: %s <up-directory-path>\n" "$0" && exit 0
 PACKAGE_DIR="$1"
 
-[ ! -d "$PACKAGE_DIR/deployment" ] && "Directory not found $PACKAGE_DIR/deployment!\n" && exit 1
+[ ! -d "$PACKAGE_DIR/deployment" ] && { printf "Directory not found %s/deployment!\n" "$PACKAGE_DIR" >&2; exit 1; }
 printf "Extracting the Balena Cloud project files in %s...\n" "$(pwd)/deployment"
 sleep 1
 cp -Rv "$PACKAGE_DIR"/deployment .
@@ -23,7 +23,7 @@ printf "Processing files done.\n"
 
 printf "Installing dependency balena-cloud-apps must be installed in version 19 !!\n"
 sleep 1
-if [[ "$(command -v npm)" > /dev/null ]]; then
+if command -v npm >/dev/null 2>&1; then
   npm link balena-cloud-apps && npm update
 else
   printf "NPMJS node not found,\n"

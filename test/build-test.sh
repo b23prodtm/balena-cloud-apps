@@ -17,27 +17,28 @@ function test_deploy() {
   # x86_64
   args=( "$testd" --no-ssh "3" --nobuild --exit )
   # shellcheck disable=SC1090
-  bash -c "$vendord/balena_deploy.sh ${args[*]}" || true
+  # Call script directly with proper array expansion to avoid word-splitting pitfalls
+  "$vendord/balena_deploy.sh" "${args[@]}" || true
   grep -q "intel-nuc" < "$testd/balena-storage/Dockerfile.x86_64"
 }
 function test_deploy_2() {
   # aarch64
   args=( "$testd" "arm64" --nobuild --exit )
   # shellcheck disable=SC1090
-  bash -c "$vendord/balena_deploy.sh ${args[*]}" || true
+  "$vendord/balena_deploy.sh" "${args[@]}" || true
   grep -q "generic-aarch64" < "$testd/balena-storage/Dockerfile.aarch64"
 }
 function test_deploy_3() {
   # armhf
   args=( "$testd" "1" --nobuild --exit )
   # shellcheck disable=SC1090
-  bash -c "$vendord/balena_deploy.sh ${args[*]}" || true
+  "$vendord/balena_deploy.sh" "${args[@]}" || true
   grep -q "raspberrypi3" < "$testd/balena-storage/Dockerfile.armhf"
 }
 function test_docker() {
   args=( "${testd}/balena-storage" "betothreeprod/raspberrypi3:latest" "armhf" )
   # shellcheck disable=SC1090
-  bash -c "$vendord/docker_build.sh ${args[*]}" || true
+  "$vendord/docker_build.sh" "${args[@]}" || true
   docker image ls -q "${args[2]}*"
 }
 function test_git_fix() {
